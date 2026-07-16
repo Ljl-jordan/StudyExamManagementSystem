@@ -1,5 +1,5 @@
 // 文件路径: src/main/java/com/ljl/studyexammanagementsystem/dao/repository/LoginLogRepository.java
-package com.ljl.studyexammanagementsystem.dao.repository;
+package com.ljl.studyexammanagementsystem.repository;
 
 import com.ljl.studyexammanagementsystem.entity.LoginLog;
 import org.springframework.data.jpa.repository.JpaRepository;

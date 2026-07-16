@@ -1,4 +1,4 @@
-package com.ljl.studyexammanagementsystem.dao.repository;
+package com.ljl.studyexammanagementsystem.repository;
 
 import com.ljl.studyexammanagementsystem.entity.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;

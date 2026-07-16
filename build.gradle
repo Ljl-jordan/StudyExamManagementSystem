@@ -62,6 +62,8 @@ dependencies {
     // Apache POI - Excel导入导出
     implementation 'org.apache.poi:poi:4.1.2'
     implementation 'org.apache.poi:poi-ooxml:4.1.2'
+
+    annotationProcessor 'org.projectlombok:lombok'
 }
 allprojects {
     gradle.projectsEvaluated {
