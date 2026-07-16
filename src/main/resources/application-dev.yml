@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/StudyExamManagementSystem?useUnicode=true&characterEncoding=utf8&characterSetResults=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        format_sql: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+jwt:
+  secret: StudyExamManagementSystemJwtSecretKey2026ForHS256Algorithm
+  expiration: 86400000   #24小时
+
+file:
+  upload-path: D:/upload/
+  allowed-extensions: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar
+  max-size: 52428800   #5MB
+
+
