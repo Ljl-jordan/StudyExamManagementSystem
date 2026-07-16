@@ -1,7 +1,7 @@
 // 文件路径: src/main/java/com/ljl/studyexammanagementsystem/configure/DataInitializer.java
 package com.ljl.studyexammanagementsystem.configure;
 
-import com.ljl.studyexammanagementsystem.dao.repository.SysUserRepository;
+import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
 import com.ljl.studyexammanagementsystem.entity.SysUser;
 import com.ljl.studyexammanagementsystem.utils.PasswordUtil;
 import org.slf4j.Logger;

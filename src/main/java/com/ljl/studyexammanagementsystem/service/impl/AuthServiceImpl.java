@@ -1,5 +1,6 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.entity.LoginLog;
 import com.ljl.studyexammanagementsystem.annotation.OperateLog;
 import com.ljl.studyexammanagementsystem.repository.LoginLogRepository;
 import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
@@ -79,6 +80,10 @@ public class AuthServiceImpl implements AuthService {
 
         // ⑥ 生成JWT Token
         String token = jwtUtil.generateToken(user.getId(), user.getLoginAccount());
+
+
+        //保存登陆日志
+        saveLoginLog(user.getId(), loginAccount, loginIp, (byte)1);
 
         // ⑦ 返回Token和用户基本信息
         Map<String, Object> data = new HashMap<>();
@@ -202,6 +207,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // ==================== 私有工具方法 ====================
+
+    /**
+     * 保存登录日志
+     */
+    private void saveLoginLog(Long userId, String loginAccount, String loginIp, Byte loginStatus) {
+        LoginLog loginLog = new LoginLog();
+        loginLog.setUserId(userId);
+        loginLog.setLoginAccount(loginAccount);
+        loginLog.setLoginIp(loginIp);
+        loginLog.setLoginTime(new Date());
+        loginLog.setLoginStatus(loginStatus);
+        loginLog.setIsDelete((byte) 0);
+        loginLogRepository.save(loginLog);
+    }
 
     /**
      * 处理登录失败
