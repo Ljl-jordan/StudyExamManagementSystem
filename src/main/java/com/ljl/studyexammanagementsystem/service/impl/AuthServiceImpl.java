@@ -1,8 +1,8 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.annotation.OperateLog;
 import com.ljl.studyexammanagementsystem.repository.LoginLogRepository;
 import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
-import com.ljl.studyexammanagementsystem.entity.LoginLog;
 import com.ljl.studyexammanagementsystem.entity.SysUser;
 import com.ljl.studyexammanagementsystem.service.AuthService;
 import com.ljl.studyexammanagementsystem.utils.JwtUtil;
@@ -40,9 +40,11 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 用户登录
-     * 流程：查询账号 → 检查禁用 → 检查锁定 → 校验密码 → 清除锁定 → 生成Token → 记录日志
+     * 流程：查询账号 → 检查禁用 → 检查锁定 → 校验密码 → 清除锁定 → 生成Token
+     * 登录日志由 @OperateLog 注解通过AOP自动记录
      */
     @Override
+    @OperateLog(module = "用户登录", type = "LOGIN")
     public Result<Map<String, Object>> login(LoginVO loginVO, String loginIp) {
         String loginAccount = loginVO.getLoginAccount();
         String inputPassword = loginVO.getPassword();
@@ -50,26 +52,22 @@ public class AuthServiceImpl implements AuthService {
         // ① 查询用户（未删除的）
         SysUser user = sysUserRepository.findByLoginAccountAndIsDelete(loginAccount, (byte) 0).orElse(null);
         if (user == null) {
-            saveLoginLog(null, loginAccount, loginIp, (byte) 0);
             return Result.unauthorized("账号或密码错误");
         }
 
         // ② 检查账号是否禁用（user_status=1为禁用）
         if (user.getUserStatus() == 1) {
-            saveLoginLog(user.getId(), loginAccount, loginIp, (byte) 0);
             return Result.forbidden("账号已被禁用，请联系管理员");
         }
 
         // ③ 检查账号是否锁定（lock_time未过期说明仍在锁定期内）
         if (user.getLockTime() != null && user.getLockTime().after(new Date())) {
-            saveLoginLog(user.getId(), loginAccount, loginIp, (byte) 0);
             return Result.paramError("账号已锁定，请" + LOCK_MINUTES + "分钟后再试");
         }
 
         // ④ 校验密码
         if (!PasswordUtil.verify(inputPassword, user.getPassword())) {
             handleLoginFail(user);
-            saveLoginLog(user.getId(), loginAccount, loginIp, (byte) 0);
             return Result.unauthorized("账号或密码错误");
         }
 
@@ -82,10 +80,7 @@ public class AuthServiceImpl implements AuthService {
         // ⑥ 生成JWT Token
         String token = jwtUtil.generateToken(user.getId(), user.getLoginAccount());
 
-        // ⑦ 保存登录成功日志
-        saveLoginLog(user.getId(), loginAccount, loginIp, (byte) 1);
-
-        // ⑧ 返回Token和用户基本信息
+        // ⑦ 返回Token和用户基本信息
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
         data.put("userId", user.getId());
@@ -98,23 +93,11 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 用户退出登录
-     * 记录退出日志（登录时间 + 退出时间）
+     * 退出日志由 @OperateLog 注解通过AOP自动记录
      */
     @Override
+    @OperateLog(module = "退出登录", type = "LOGOUT")
     public Result<Void> logout(Long userId) {
-        if (userId != null) {
-            SysUser user = sysUserRepository.findById(userId).orElse(null);
-            if (user != null) {
-                LoginLog log = new LoginLog();
-                log.setUserId(userId);
-                log.setLoginAccount(user.getLoginAccount());
-                log.setLoginTime(new Date());
-                log.setLogoutTime(new Date());
-                log.setLoginStatus((byte) 1);
-                log.setIsDelete((byte) 0);
-                loginLogRepository.save(log);
-            }
-        }
         return Result.success("退出成功", null);
     }
 
@@ -149,8 +132,10 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 重置密码
      * 验证原密码 → 校验新密码长度 → 加密保存
+     * 操作日志由 @OperateLog 注解通过AOP自动记录
      */
     @Override
+    @OperateLog(module = "重置密码", type = "OTHER")
     public Result<Void> resetPassword(Long userId, String oldPassword, String newPassword) {
         SysUser user = sysUserRepository.findById(userId).orElse(null);
         if (user == null) {
@@ -198,8 +183,10 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 手动解锁账号（管理员操作）
      * 清除lockTime字段，恢复账号正常状态
+     * 操作日志由 @OperateLog 注解通过AOP自动记录
      */
     @Override
+    @OperateLog(module = "解锁账号", type = "OTHER")
     public Result<Void> unlockAccount(String loginAccount) {
         SysUser user = sysUserRepository.findByLoginAccountAndIsDelete(loginAccount, (byte) 0).orElse(null);
         if (user == null) {
@@ -234,20 +221,5 @@ public class AuthServiceImpl implements AuthService {
             user.setLockTime(lockCal.getTime());
             sysUserRepository.save(user);
         }
-    }
-
-    /**
-     * 保存登录日志
-     * 登录成功/失败均调用此方法记录日志
-     */
-    private void saveLoginLog(Long userId, String loginAccount, String loginIp, Byte status) {
-        LoginLog log = new LoginLog();
-        log.setUserId(userId);
-        log.setLoginAccount(loginAccount);
-        log.setLoginIp(loginIp);
-        log.setLoginTime(new Date());
-        log.setLoginStatus(status);
-        log.setIsDelete((byte) 0);
-        loginLogRepository.save(log);
     }
 }
