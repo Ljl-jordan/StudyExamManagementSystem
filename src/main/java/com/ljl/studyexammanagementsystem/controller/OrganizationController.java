@@ -6,6 +6,7 @@ import com.ljl.studyexammanagementsystem.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,7 +29,7 @@ public class OrganizationController {
 
     @GetMapping("/list")
     @ApiOperation(value = "组织分页列表")
-    public Result<Map<String, Object>> list(
+    public Result<Page<Organization>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String keyword) {
@@ -37,7 +38,7 @@ public class OrganizationController {
 
     @GetMapping("/search")
     @ApiOperation(value = "组织名称模糊搜索")
-    public Result<Map<String, Object>> search(
+    public Result<Page<Organization>> search(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {

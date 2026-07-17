@@ -70,7 +70,8 @@ public class MessageController {
     @PostMapping("/manualPush")
     @ApiOperation(value = "手动批量推送消息")
     public Result<Void> manualPush(@RequestBody Map<String, Object> params) {
-        List<Long> userIds = (List<Long>) params.get("userIds");
+        List<Number> rawUserIds = (List<Number>) params.get("userIds");
+        List<Long> userIds = rawUserIds != null ? rawUserIds.stream().map(Number::longValue).collect(java.util.stream.Collectors.toList()) : null;
         String title = (String) params.get("title");
         String content = (String) params.get("content");
         return messageService.manualPush(userIds, title, content);

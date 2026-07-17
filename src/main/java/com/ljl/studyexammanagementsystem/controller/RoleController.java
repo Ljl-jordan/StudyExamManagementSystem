@@ -1,12 +1,15 @@
 package com.ljl.studyexammanagementsystem.controller;
 
+import com.ljl.studyexammanagementsystem.entity.SysRole;
 import com.ljl.studyexammanagementsystem.service.RoleService;
 import com.ljl.studyexammanagementsystem.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import javax.management.relation.Role;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +27,7 @@ public class RoleController {
      */
     @GetMapping("/list")
     @ApiOperation(value = "角色分页列表")
-    public Result<Map<String, Object>> list(
+    public Result<Page<SysRole>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         return roleService.page(pageNum, pageSize);
