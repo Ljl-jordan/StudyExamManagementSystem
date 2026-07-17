@@ -8,48 +8,63 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/organization")
-@Api(tags = "OrganizationController")
+@RequestMapping("/api/org")
+@Api(tags = "组织管理接口")
 public class OrganizationController {
 
     @Autowired
     private OrganizationService organizationService;
 
-    @GetMapping("/list")
-    @ApiOperation(value = "获取组织机构列表", notes = "获取所有组织机构列表")
-    public Result<List<Organization>> list() {
-        List<Organization> organizations = organizationService.findAll();
-        return Result.success(organizations);
+    @GetMapping("/tree")
+    @ApiOperation(value = "获取组织树形结构")
+    public Result<List<Organization>> tree() {
+        return organizationService.getTree();
     }
 
-    @GetMapping("/tree/{parentId}")
-    @ApiOperation(value = "获取组织机构树", notes = "根据父级ID获取组织机构树")
-    public Result<List<Organization>> tree(@PathVariable Long parentId) {
-        List<Organization> organizations = organizationService.findByParentId(parentId);
-        return Result.success(organizations);
+    @GetMapping("/list")
+    @ApiOperation(value = "组织分页列表")
+    public Result<Map<String, Object>> list(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        return organizationService.page(pageNum, pageSize, keyword);
+    }
+
+    @GetMapping("/search")
+    @ApiOperation(value = "组织名称模糊搜索")
+    public Result<Map<String, Object>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return organizationService.page(pageNum, pageSize, keyword);
     }
 
     @PostMapping("/add")
-    @ApiOperation(value = "添加组织机构", notes = "添加新的组织机构")
-    public Result<Void> add(@RequestBody Organization organization) {
-        organizationService.save(organization);
-        return Result.success();
+    @ApiOperation(value = "新增组织")
+    public Result<Void> add(@RequestBody Organization organization, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return organizationService.add(organization, userId);
     }
 
-    @PutMapping("/update/{id}")
-    @ApiOperation(value = "更新组织机构", notes = "更新指定ID的组织机构")
-    public Result<Void> update(@PathVariable Long id, @RequestBody Organization organization) {
-        organizationService.update(id, organization);
-        return Result.success();
+    @PutMapping("/edit")
+    @ApiOperation(value = "编辑组织")
+    public Result<Void> edit(@RequestBody Organization organization, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        Long id = organization.getId();
+        if (id == null) {
+            return Result.paramError("组织ID不能为空");
+        }
+        return organizationService.update(id, organization, userId);
     }
 
-    @DeleteMapping("/delete/{id}")
-    @ApiOperation(value = "删除组织机构", notes = "删除指定ID的组织机构")
+    @DeleteMapping("/del/{id}")
+    @ApiOperation(value = "删除组织")
     public Result<Void> delete(@PathVariable Long id) {
-        organizationService.deleteById(id);
-        return Result.success();
+        return organizationService.delete(id);
     }
 }
