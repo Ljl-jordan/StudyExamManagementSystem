@@ -26,6 +26,10 @@ public class SysRole {
     @ApiModelProperty(value = "角色类型：0内置 1自定义")
     private Byte roleType;
 
+    @Column(name = "menu_ids", length = 500)
+    @ApiModelProperty(value = "绑定菜单ID集合（兼容字段，实际权限走sys_role_menu）")
+    private String menuIds;
+
     @Column(name = "data_scope")
     @ApiModelProperty(value = "数据权限：0全部 1本组织及下级 2仅本人")
     private Byte dataScope;
