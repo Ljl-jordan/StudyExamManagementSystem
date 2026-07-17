@@ -1,6 +1,8 @@
 package com.ljl.studyexammanagementsystem.service;
 
+import com.ljl.studyexammanagementsystem.entity.SysUser;
 import com.ljl.studyexammanagementsystem.vo.Result;
+import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,7 +11,7 @@ import java.util.Map;
 
 public interface UserService {
 
-    Result<Map<String, Object>> page(Integer pageNum, Integer pageSize, String keyword, Long orgId, HttpServletRequest request);
+    Result<Page<SysUser>> page(Integer pageNum, Integer pageSize, String keyword, Long orgId, HttpServletRequest request);
 
     Result<Void> add(Map<String, Object> params, Long userId);
 

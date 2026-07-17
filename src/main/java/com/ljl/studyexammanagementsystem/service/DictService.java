@@ -3,13 +3,14 @@ package com.ljl.studyexammanagementsystem.service;
 
 import com.ljl.studyexammanagementsystem.entity.Dict;
 import com.ljl.studyexammanagementsystem.vo.Result;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
 
 public interface DictService {
 
-    Result<Map<String, Object>> page(Integer pageNum, Integer pageSize, String dictType);
+    Result<Page<Dict>> page(Integer pageNum, Integer pageSize, String dictType);
 
     Result<List<Dict>> dropdown(String dictType);
 

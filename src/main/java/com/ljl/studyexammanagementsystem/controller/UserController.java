@@ -1,10 +1,12 @@
 package com.ljl.studyexammanagementsystem.controller;
 
+import com.ljl.studyexammanagementsystem.entity.SysUser;
 import com.ljl.studyexammanagementsystem.service.UserService;
 import com.ljl.studyexammanagementsystem.vo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,7 +24,7 @@ public class UserController {
 
     @GetMapping("/list")
     @ApiOperation(value = "用户分页列表", notes = "支持数据权限过滤、关键字搜索、组织筛选")
-    public Result<Map<String, Object>> list(
+        public Result<Page<SysUser>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String keyword,

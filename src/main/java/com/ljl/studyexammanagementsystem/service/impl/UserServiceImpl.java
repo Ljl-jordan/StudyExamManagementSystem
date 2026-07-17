@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
 
     @Override
-    public Result<Map<String, Object>> page(Integer pageNum, Integer pageSize, String keyword, Long orgId, HttpServletRequest request) {
+    public Result<Page<SysUser>> page(Integer pageNum, Integer pageSize, String keyword, Long orgId, HttpServletRequest request) {
         //从请求拿到当前登陆用户id，所属组织id
         Long userId = (Long) request.getAttribute("userId");
         Long orgIdAttr = (Long) request.getAttribute("orgId");
@@ -86,26 +86,26 @@ public class UserServiceImpl implements UserService {
 
         Page<SysUser> page = sysUserRepository.findAll(spec, pageable);
 
-        Map<String, Object> data = new HashMap<>();
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (SysUser u : page.getContent()) {
-            //通过map组装用户信息
-            Map<String, Object> item = new HashMap<>();
-            item.put("userId", u.getId());
-            item.put("loginAccount", u.getLoginAccount());
-            item.put("userName", u.getUserName());
-            item.put("phone", u.getPhone());
-            item.put("orgId", u.getOrgId());
-            item.put("userStatus", u.getUserStatus());
-            item.put("createTime", u.getCreateTime());
-            list.add(item);
-        }
-        //封装分页信息
-        data.put("list", list);
-        data.put("total", page.getTotalElements());
-        data.put("pageNum", pageNum);
-        data.put("pageSize", pageSize);
-        return Result.success(data);
+//        Map<String, Object> data = new HashMap<>();
+//        List<Map<String, Object>> list = new ArrayList<>();
+//        for (SysUser u : page.getContent()) {
+//            //通过map组装用户信息
+//            Map<String, Object> item = new HashMap<>();
+//            item.put("userId", u.getId());
+//            item.put("loginAccount", u.getLoginAccount());
+//            item.put("userName", u.getUserName());
+//            item.put("phone", u.getPhone());
+//            item.put("orgId", u.getOrgId());
+//            item.put("userStatus", u.getUserStatus());
+//            item.put("createTime", u.getCreateTime());
+//            list.add(item);
+//        }
+//        //封装分页信息
+//        data.put("list", list);
+//        data.put("total", page.getTotalElements());
+//        data.put("pageNum", pageNum);
+//        data.put("pageSize", pageSize);
+        return Result.success(page);
     }
 
     @Override

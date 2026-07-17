@@ -6,6 +6,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity
@@ -51,4 +52,8 @@ public class SysMenu {
     @Column(name = "is_delete", nullable = false)
     @ApiModelProperty(value = "是否删除：0否 1是")
     private Byte isDelete;
+
+    @Transient
+    @ApiModelProperty(value = "子菜单列表")
+    private List<SysMenu> children;
 }

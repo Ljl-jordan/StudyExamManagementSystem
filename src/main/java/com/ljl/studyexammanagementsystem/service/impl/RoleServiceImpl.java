@@ -22,7 +22,7 @@ import java.util.Map;
 
 @Service
 public class RoleServiceImpl implements RoleService {
-
+//注入角色表，角色用户绑定表，角色菜单绑定表
     @Autowired
     private SysRoleRepository sysRoleRepository;
 
@@ -35,17 +35,20 @@ public class RoleServiceImpl implements RoleService {
     /**
      * 角色分页列表
      */
-    @Override
-    public Result<Map<String, Object>> page(Integer pageNum, Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
-        Page<SysRole> page = sysRoleRepository.findAllActive(pageable);
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("list", page.getContent());
-        data.put("total", page.getTotalElements());
-        data.put("pageNum", pageNum);
-        data.put("pageSize", pageSize);
-        return Result.success(data);
+    @Override
+    public Result<Page<SysRole>> page(Integer pageNum, Integer pageSize) {
+        //构建分页对象
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
+        //直接查询所有有效角色
+        Page<SysRole> page = sysRoleRepository.findAllActive(pageable);
+//        //封装成map返回分页信息
+//        Map<String, Object> data = new HashMap<>();
+//        data.put("list", page.getContent());
+//        data.put("total", page.getTotalElements());
+//        data.put("pageNum", pageNum);
+//        data.put("pageSize", pageSize);
+        return Result.success(page);
     }
 
     /**
@@ -54,11 +57,12 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public Result<Void> add(Map<String, Object> params, Long userId) {
+        //获取角色名称并校验是否为空
         String roleName = (String) params.get("roleName");
         if (roleName == null || roleName.trim().isEmpty()) {
             return Result.paramError("角色名称不能为空");
         }
-
+        //创建角色对象并设置属性
         SysRole role = new SysRole();
         role.setRoleName(roleName.trim());
         role.setRoleType((byte) 1);
@@ -67,7 +71,7 @@ public class RoleServiceImpl implements RoleService {
         role.setCreateUser(userId);
         role.setCreateTime(new Date());
         role.setIsDelete((byte) 0);
-        sysRoleRepository.save(role);
+        sysRoleRepository.save(role);//将角色保存到数据库
         return Result.success("新增成功", null);
     }
 
@@ -77,6 +81,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public Result<Void> update(Long id, Map<String, Object> params, Long userId) {
+        //根据id查询角色并校验是否存在
         SysRole role = sysRoleRepository.findById(id).orElse(null);
         if (role == null || role.getIsDelete() == 1) {
             return Result.paramError("角色不存在");

@@ -1,13 +1,15 @@
 package com.ljl.studyexammanagementsystem.service;
 
+import com.ljl.studyexammanagementsystem.entity.SysRole;
 import com.ljl.studyexammanagementsystem.vo.Result;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
 
 public interface RoleService {
 
-    Result<Map<String, Object>> page(Integer pageNum, Integer pageSize);
+    Result<Page<SysRole>> page(Integer pageNum, Integer pageSize);
 
     Result<Void> add(Map<String, Object> params, Long userId);
 
@@ -21,3 +23,4 @@ public interface RoleService {
 
     Result<Void> allotUser(List<Long> userIds, Long roleId);
 }
+

@@ -26,7 +26,7 @@ public class DictServiceImpl implements DictService {
     // ==================== 1. 分页查询 ====================
 
     @Override
-    public Result<Map<String, Object>> page(Integer pageNum, Integer pageSize, String dictType) {
+    public Result<Page<Dict>> page(Integer pageNum, Integer pageSize, String dictType) {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, Sort.by(Sort.Direction.ASC, "sort"));
         Page<Dict> page;
         if (dictType != null && !dictType.trim().isEmpty()) {
@@ -35,12 +35,12 @@ public class DictServiceImpl implements DictService {
             page = dictRepository.findByIsDelete((byte) 0, pageable);
         }
 
-        Map<String, Object> data = new HashMap<>();
-        data.put("list", page.getContent());
-        data.put("total", page.getTotalElements());
-        data.put("pageNum", pageNum);
-        data.put("pageSize", pageSize);
-        return Result.success(data);
+//        Map<String, Object> data = new HashMap<>();
+//        data.put("list", page.getContent());
+//        data.put("total", page.getTotalElements());
+//        data.put("pageNum", pageNum);
+//        data.put("pageSize", pageSize);
+        return Result.success(page);
     }
 
     // ==================== 2. 下拉列表 ====================

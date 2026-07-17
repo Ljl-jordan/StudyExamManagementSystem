@@ -32,7 +32,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public Result<Map<String, Object>> page(Integer pageNum, Integer pageSize, String keyword) {
+    public Result<Page<Organization>> page(Integer pageNum, Integer pageSize, String keyword) {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         Page<Organization> page;
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -40,12 +40,12 @@ public class OrganizationServiceImpl implements OrganizationService {
         } else {
             page = organizationRepository.findAll(pageable);
         }
-        Map<String, Object> data = new HashMap<>();
-        data.put("list", page.getContent());
-        data.put("total", page.getTotalElements());
-        data.put("pageNum", pageNum);
-        data.put("pageSize", pageSize);
-        return Result.success(data);
+//        Map<String, Object> data = new HashMap<>();
+//        data.put("list", page.getContent());
+//        data.put("total", page.getTotalElements());
+//        data.put("pageNum", pageNum);
+//        data.put("pageSize", pageSize);
+        return Result.success(page);
     }
 
     @Override
