@@ -199,6 +199,99 @@ CREATE TABLE `sys_async_export` (
                                     KEY idx_is_delete (`is_delete`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='异步导出任务表';
 
+CREATE TABLE `sys_message` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                               `receive_user_id` bigint NOT NULL COMMENT '接收消息用户ID',
+                               `business_type` varchar(30) NOT NULL COMMENT '业务类型：learnTask/examPaper/manual',
+                               `business_id` bigint DEFAULT NULL COMMENT '关联业务ID',
+                               `title` varchar(100) NOT NULL COMMENT '消息标题',
+                               `content` varchar(500) DEFAULT NULL COMMENT '消息内容',
+                               `read_flag` tinyint NOT NULL DEFAULT 0 COMMENT '已读标记：0未读 1已读',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
+                               PRIMARY KEY (`id`),
+                               KEY idx_receive_user (`receive_user_id`),
+                               KEY idx_read_flag (`read_flag`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内消息表';
+
+
+-- ====================== 菜单权限表 sys_menu（完整初始数据） ======================
+INSERT INTO sys_menu (id, parent_id, menu_name, route, button_perms, sort, create_time, update_time, is_delete) VALUES
+-- 一级菜单
+(1, 0, '系统管理', 'system', NULL, 1, NOW(), NOW(), 0),
+(2, 0, '组织管理', 'organization', NULL, 2, NOW(), NOW(), 0),
+(3, 0, '用户管理', 'user', NULL, 3, NOW(), NOW(), 0),
+(4, 0, '角色管理', 'role', NULL, 4, NOW(), NOW(), 0),
+(5, 0, '日志管理', 'log', NULL, 5, NOW(), NOW(), 0),
+(6, 0, '消息中心', 'message', NULL, 6, NOW(), NOW(), 0),
+(7, 0, '系统配置', 'config', NULL, 7, NOW(), NOW(), 0),
+
+-- 组织管理子菜单
+(10, 2, '组织列表', 'org:list', 'org:list,org:search', 1, NOW(), NOW(), 0),
+(11, 2, '新增组织', 'org:add', 'org:add', 2, NOW(), NOW(), 0),
+(12, 2, '编辑组织', 'org:edit', 'org:edit', 3, NOW(), NOW(), 0),
+(13, 2, '删除组织', 'org:delete', 'org:delete', 4, NOW(), NOW(), 0),
+
+-- 用户管理子菜单
+(20, 3, '用户列表', 'user:list', 'user:list,user:selectUser', 1, NOW(), NOW(), 0),
+(21, 3, '新增用户', 'user:add', 'user:add', 2, NOW(), NOW(), 0),
+(22, 3, '编辑用户', 'user:edit', 'user:edit', 3, NOW(), NOW(), 0),
+(23, 3, '删除用户', 'user:delete', 'user:delete', 4, NOW(), NOW(), 0),
+(24, 3, '导入用户', 'user:import', 'user:import', 5, NOW(), NOW(), 0),
+(25, 3, '重置密码', 'user:resetPwd', 'user:resetPwd', 6, NOW(), NOW(), 0),
+(26, 3, '批量调整组织', 'user:batchUpdateOrg', 'user:batchUpdateOrg', 7, NOW(), NOW(), 0),
+(27, 3, '批量禁用', 'user:batchDisable', 'user:batchDisable', 8, NOW(), NOW(), 0),
+
+-- 角色管理子菜单
+(30, 4, '角色列表', 'role:list', 'role:list', 1, NOW(), NOW(), 0),
+(31, 4, '新增角色', 'role:add', 'role:add', 2, NOW(), NOW(), 0),
+(32, 4, '编辑角色', 'role:edit', 'role:edit', 3, NOW(), NOW(), 0),
+(33, 4, '删除角色', 'role:delete', 'role:delete', 4, NOW(), NOW(), 0),
+(34, 4, '复制角色', 'role:copy', 'role:copy', 5, NOW(), NOW(), 0),
+(35, 4, '分配菜单', 'role:allotMenu', 'role:allotMenu', 6, NOW(), NOW(), 0),
+(36, 4, '分配用户', 'role:allotUser', 'role:allotUser', 7, NOW(), NOW(), 0),
+
+-- 日志管理子菜单
+(40, 5, '登录日志', 'loginLog:list', 'loginLog:list', 1, NOW(), NOW(), 0),
+(41, 5, '操作日志', 'operLog:list', 'operLog:list', 2, NOW(), NOW(), 0),
+
+-- 消息中心子菜单
+(50, 6, '消息列表', 'message:list', 'message:list,message:read,message:delete', 1, NOW(), NOW(), 0),
+(51, 6, '手动推送', 'message:push', 'message:push', 2, NOW(), NOW(), 0),
+
+-- 系统配置子菜单
+(60, 7, '配置列表', 'config:list', 'config:list', 1, NOW(), NOW(), 0),
+(61, 7, '修改配置', 'config:edit', 'config:edit', 2, NOW(), NOW(), 0);
+
+-- ====================== 角色菜单关联（超级管理员角色id=1 绑定全部菜单） ======================
+INSERT INTO sys_role_menu (role_id, menu_id, create_user, create_time, update_user, update_time, is_delete)
+SELECT 1, id, NULL, NOW(), NULL, NOW(), 0 FROM sys_menu WHERE is_delete = 0;
+
+-- ====================== 系统配置初始数据（补充） ======================
+INSERT INTO sys_config (config_key, config_value, config_desc, update_time, is_delete) VALUES
+                                                                                           ('system:passwordDefault', '123456', '用户初始默认密码', NOW(), 0),
+                                                                                           ('system:loginFailLimit', '5', '登录失败锁定次数', NOW(), 0),
+                                                                                           ('system:lockMinutes', '30', '账号锁定时长（分钟）', NOW(), 0),
+                                                                                           ('system:exportLimit', '5000', '同步导出上限条数', NOW(), 0),
+                                                                                           ('system:messageExpireDays', '90', '消息自动清理天数', NOW(), 0),
+                                                                                           ('system:logArchiveDays', '180', '日志归档天数', NOW(), 0);
+
+-- ====================== 补充：创建示例子组织 ======================
+INSERT INTO sys_org (parent_id, org_name, create_user, create_time, update_user, update_time, is_delete) VALUES
+                                                                                                             (1, '技术部', 1, NOW(), 1, NOW(), 0),
+                                                                                                             (1, '财务部', 1, NOW(), 1, NOW(), 0),
+                                                                                                             (1, '运营部', 1, NOW(), 1, NOW(), 0),
+                                                                                                             (2, '前端组', 1, NOW(), 1, NOW(), 0),
+                                                                                                             (2, '后端组', 1, NOW(), 1, NOW(), 0);
+
+-- ====================== 补充：创建示例用户（密码均为123456） ======================
+INSERT INTO sys_user (login_account, password, phone, user_name, org_id, user_status, create_user, create_time, update_user, update_time, is_delete) VALUES
+                                                                                                                                                         ('zhangsan', 'e10adc3949ba59abbe56e057f20f883e', '13900001111', '张三', 4, 0, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                                         ('lisi',     'e10adc3949ba59abbe56e057f20f883e', '13900002222', '李四', 5, 0, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                                         ('wangwu',   'e10adc3949ba59abbe56e057f20f883e', '13900003333', '王五', 6, 0, 1, NOW(), 1, NOW(), 0);
+
+
 -- 测试初始化数据
 INSERT INTO sys_async_export (user_id,file_id,task_status,export_params,create_time,update_time,is_delete)
 VALUES (1,1,1,'{\"orgId\":1}',NOW(),NOW(),0);

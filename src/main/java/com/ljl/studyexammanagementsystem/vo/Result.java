@@ -13,6 +13,7 @@ public class Result<T> implements Serializable {
     public static final Integer CODE_PARAM_ERROR = 400;
     public static final Integer CODE_UNAUTHORIZED = 401;
     public static final Integer CODE_FORBIDDEN = 403;
+    public static final Integer CODE_BUSINESS_BLOCK = 405;
     public static final Integer CODE_SERVER_ERROR = 500;
 
     private Integer code;
@@ -51,6 +52,7 @@ public class Result<T> implements Serializable {
         return new Result<>(CODE_FORBIDDEN, msg, null);
     }
 
+    public static <T> Result<T> businessBlock(String msg) {return new Result<>(CODE_BUSINESS_BLOCK, msg, null);}
     public static <T> Result<T> serverError(String msg) {
         return new Result<>(CODE_SERVER_ERROR, msg, null);
     }

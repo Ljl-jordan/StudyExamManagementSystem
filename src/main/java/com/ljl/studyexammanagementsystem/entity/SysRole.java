@@ -1,36 +1,37 @@
 package com.ljl.studyexammanagementsystem.entity;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.List;
 
 @Data
 @Entity
-@ApiModel(value = "Organization", description = "组织机构")
-@Table(name = "sys_org")
-@JsonInclude(JsonInclude.Include.ALWAYS)
-public class Organization {
+@ApiModel(description = "角色")
+@Table(name = "sys_role")
+public class SysRole {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "组织机构ID")
+    @ApiModelProperty(value = "角色ID")
     private Long id;
 
-    @Column(name = "parent_id", nullable = false)
-    @ApiModelProperty(value = "父组织机构ID")
-    private Long parentId;
+    @Column(name = "role_name", nullable = false, length = 50)
+    @ApiModelProperty(value = "角色名称")
+    private String roleName;
 
-    @Column(name = "org_name", nullable = false, length = 50)
-    @ApiModelProperty(value = "组织机构名称")
-    private String orgName;
+    @Column(name = "role_type", nullable = false)
+    @ApiModelProperty(value = "角色类型：0内置 1自定义")
+    private Byte roleType;
+
+    @Column(name = "data_scope")
+    @ApiModelProperty(value = "数据权限：0全部 1本组织及下级 2仅本人")
+    private Byte dataScope;
 
     @Column(name = "create_user")
-    @ApiModelProperty(value = "创建用户ID")
+    @ApiModelProperty(value = "创建人")
     private Long createUser;
 
     @Column(name = "create_time", updatable = false)
@@ -39,7 +40,7 @@ public class Organization {
     private Date createTime;
 
     @Column(name = "update_user")
-    @ApiModelProperty(value = "更新用户ID")
+    @ApiModelProperty(value = "更新人")
     private Long updateUser;
 
     @Column(name = "update_time")
@@ -48,10 +49,6 @@ public class Organization {
     private Date updateTime;
 
     @Column(name = "is_delete", nullable = false)
-    @ApiModelProperty(value = "删除标志")
+    @ApiModelProperty(value = "是否删除：0否 1是")
     private Byte isDelete;
-
-    @Transient
-    @ApiModelProperty(value = "子组织列表（树形查询时返回）")
-    private List<Organization> children;
 }
