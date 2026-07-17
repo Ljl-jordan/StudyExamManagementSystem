@@ -1,7 +1,8 @@
-// 文件路径: src/main/java/com/ljl/studyexammanagementsystem/configure/TokenInterceptor.java
 package com.ljl.studyexammanagementsystem.configure;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ljl.studyexammanagementsystem.entity.SysUser;
+import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
 import com.ljl.studyexammanagementsystem.utils.JwtUtil;
 import com.ljl.studyexammanagementsystem.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,11 +12,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-/**
- * Token拦截器
- * 拦截所有 /api/** 请求，验证JWT有效性
- * 登录接口 /api/auth/login 在WebMvcConfig中配置放行
- */
 @Component
 public class TokenInterceptor implements HandlerInterceptor {
 
@@ -24,6 +20,9 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private SysUserRepository sysUserRepository;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -37,7 +36,7 @@ public class TokenInterceptor implements HandlerInterceptor {
             return false;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(7);//去掉“Bearer”前缀
 
         if (jwtUtil.isTokenExpired(token)) {
             writeResponse(response, "Token已过期，请重新登录");
@@ -48,17 +47,24 @@ public class TokenInterceptor implements HandlerInterceptor {
             writeResponse(response, "Token无效");
             return false;
         }
-
-        // 将用户信息存入request属性，后续Controller直接取用
-        request.setAttribute("userId", jwtUtil.getUserIdFromToken(token));
-        request.setAttribute("loginAccount", jwtUtil.getLoginAccountFromToken(token));
+//注入用户信息
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        request.setAttribute("userId", userId); //将用户ID注入到请求中
+        request.setAttribute("loginAccount", jwtUtil.getLoginAccountFromToken(token));  //将登录账号注入到请求中
+//根据用户id查询用户信息，注入到请求中，用于后续权限控制
+        SysUser user = sysUserRepository.findActiveById(userId).orElse(null);
+        if (user != null) {
+            request.setAttribute("orgId", user.getOrgId());
+        }
 
         return true;
     }
 
+    //统一返回格式写入响应
     private void writeResponse(HttpServletResponse response, String msg) throws Exception {
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(200);
+        response.setContentType("application/json;charset=UTF-8");//设置响应内容类型为application/json
+        response.setStatus(200);//设置响应状态码为200
+        //将错误信息通过Result.unauthorized(msg)封装为统一响应格式，再用objectMapper序列化为JSON字符串写入响应体
         response.getWriter().write(objectMapper.writeValueAsString(Result.unauthorized(msg)));
     }
 }
