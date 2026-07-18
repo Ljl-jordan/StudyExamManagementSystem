@@ -215,6 +215,107 @@ CREATE TABLE `sys_message` (
                                KEY idx_is_delete (`is_delete`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内消息表';
 
+-- ... existing code ...
+
+-- ====================== 知识库分类表 kb_category ======================
+CREATE TABLE `kb_category` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                               `parent_id` bigint NOT NULL DEFAULT 0 COMMENT '上级分类ID，顶级分类默认0',
+                               `category_name` varchar(50) NOT NULL COMMENT '分类名称，同级唯一',
+                               `sort_order` int DEFAULT 0 COMMENT '排序序号',
+                               `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                               `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                               PRIMARY KEY (`id`),
+                               KEY idx_parent_id (`parent_id`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库分类表';
+
+-- ====================== 知识库素材表 kb_material ======================
+CREATE TABLE `kb_material` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                               `category_id` bigint NOT NULL COMMENT '所属分类ID，关联kb_category.id',
+                               `material_name` varchar(100) NOT NULL COMMENT '素材名称',
+                               `material_type` tinyint NOT NULL COMMENT '素材内容类型：1富文本 2附件 3外链',
+                               `rich_content` text DEFAULT NULL COMMENT '富文本内容（material_type=1时使用）',
+                               `link_url` varchar(255) DEFAULT NULL COMMENT '外链地址（material_type=3时使用）',
+                               `cover_file_id` bigint DEFAULT NULL COMMENT '封面文件ID，关联sys_file.id',
+                               `material_status` tinyint NOT NULL DEFAULT 0 COMMENT '素材状态：0草稿 1已发布',
+                               `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                               `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                               PRIMARY KEY (`id`),
+                               KEY idx_category_id (`category_id`),
+                               KEY idx_material_status (`material_status`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库素材表';
+
+-- ====================== 素材附件关联表 kb_material_file ======================
+CREATE TABLE `kb_material_file` (
+                                    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                    `material_id` bigint NOT NULL COMMENT '素材ID，关联kb_material.id',
+                                    `file_id` bigint NOT NULL COMMENT '文件ID，关联sys_file.id',
+                                    `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                    `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                                    PRIMARY KEY (`id`),
+                                    KEY idx_material_id (`material_id`),
+                                    KEY idx_file_id (`file_id`),
+                                    KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='素材附件关联表';
+
+-- ====================== 学习任务表 learn_task ======================
+CREATE TABLE `learn_task` (
+                              `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                              `task_name` varchar(100) NOT NULL COMMENT '任务名称',
+                              `task_desc` varchar(500) DEFAULT NULL COMMENT '任务描述',
+                              `start_time` datetime DEFAULT NULL COMMENT '任务开始时间',
+                              `end_time` datetime DEFAULT NULL COMMENT '任务结束时间',
+                              `task_status` tinyint NOT NULL DEFAULT 0 COMMENT '任务状态：0草稿 1已下发 2已结束',
+                              `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                              `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                              `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                              PRIMARY KEY (`id`),
+                              KEY idx_task_status (`task_status`),
+                              KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习任务表';
+
+-- ====================== 学习任务素材关联表 learn_task_material ======================
+CREATE TABLE `learn_task_material` (
+                                       `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                       `task_id` bigint NOT NULL COMMENT '任务ID，关联learn_task.id',
+                                       `material_id` bigint NOT NULL COMMENT '素材ID，关联kb_material.id',
+                                       `sort_order` int DEFAULT 0 COMMENT '素材排序序号',
+                                       `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                       `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                                       PRIMARY KEY (`id`),
+                                       KEY idx_task_id (`task_id`),
+                                       KEY idx_material_id (`material_id`),
+                                       KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习任务素材关联表';
+
+-- ====================== 学习任务用户关联表 learn_task_user ======================
+CREATE TABLE `learn_task_user` (
+                                   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                   `task_id` bigint NOT NULL COMMENT '任务ID，关联learn_task.id',
+                                   `user_id` bigint NOT NULL COMMENT '用户ID，关联sys_user.id',
+                                   `learn_status` tinyint NOT NULL DEFAULT 0 COMMENT '学习状态：0未开始 1学习中 2已完成',
+                                   `learn_score` decimal(5,2) DEFAULT NULL COMMENT '学习得分',
+                                   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                                   PRIMARY KEY (`id`),
+                                   KEY idx_task_id (`task_id`),
+                                   KEY idx_user_id (`user_id`),
+                                   KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习任务用户关联表';
+
+
 
 -- ====================== 菜单权限表 sys_menu（完整初始数据） ======================
 INSERT INTO sys_menu (id, parent_id, menu_name, route, button_perms, sort, create_time, update_time, is_delete) VALUES
