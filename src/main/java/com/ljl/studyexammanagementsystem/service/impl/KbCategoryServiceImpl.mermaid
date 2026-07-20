@@ -1,0 +1,22 @@
+graph TB
+    A["登录认证模块<br>/api/auth"] --> B["基础权限模块"]
+    B --> B1["用户管理<br>/api/user"]
+    B --> B2["角色管理<br>/api/role"]
+    B --> B3["菜单权限<br>/api/menu"]
+    B --> B4["组织架构<br>/api/org"]
+    
+    C["系统运维模块"] --> C1["日志管理<br>/api/loginLog + /api/operLog"]
+    C --> C2["系统配置<br>/api/config"]
+    C --> C3["字典管理<br>/api/dict"]
+    C --> C4["文件管理<br>/api/file"]
+    C --> C5["异步导出<br>/api/export"]
+    C --> C6["站内消息<br>/api/message"]
+    
+    D["知识库模块<br>/api/kb"] --> D1["分类管理<br>/api/kb/category"]
+    D --> D2["素材管理<br>/api/kb/material"]
+    
+    E["学习任务模块<br>/api/learn"] --> E1["任务管理<br>/api/learn/task"]
+    E --> E2["学习记录<br>/api/learn/study"]
+    
+    D2 -->|提供已发布素材| E1
+    E1 -->|下发后学员学习| E2

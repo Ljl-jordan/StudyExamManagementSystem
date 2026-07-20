@@ -12,4 +12,8 @@ public interface LearnTaskUserRepository extends JpaRepository<LearnTaskUser, Lo
     List<LearnTaskUser> findByTaskIdAndIsDelete(Long taskId, Byte isDelete);
 
     long countByUserIdAndIsDelete(Long userId, Byte isDelete);
+
+    LearnTaskUser findByTaskIdAndUserIdAndIsDelete(Long taskId, Long userId, Byte isDelete);
+
+    List<LearnTaskUser> findByTaskIdAndUserIdInAndIsDelete(Long taskId, List<Long> userIds, Byte isDelete);
 }

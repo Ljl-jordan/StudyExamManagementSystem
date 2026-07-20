@@ -27,10 +27,11 @@ public class LearnTaskController {
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long taskStatus,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         Long orgId = (Long) request.getAttribute("orgId");
-        return learnTaskService.page(pageNum, pageSize, keyword, userId, orgId);
+        return learnTaskService.page(pageNum, pageSize, keyword, taskStatus, userId, orgId);
     }
 
     @GetMapping("/detail/{id}")
@@ -71,9 +72,42 @@ public class LearnTaskController {
         return learnTaskService.delete(id);
     }
 
-    /**
-     * 从请求参数构建任务实体
-     */
+    @PutMapping("/publish/{id}")
+    @ApiOperation(value = "任务下发")
+    public Result<Void> publish(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return learnTaskService.publish(id, userId);
+    }
+
+    @PostMapping("/assignByOrg")
+    @ApiOperation(value = "批量按组织分配学员")
+    public Result<Void> assignByOrgs(@RequestBody Map<String, Object> params) {
+        Long taskId = params.get("taskId") != null ? Long.valueOf(params.get("taskId").toString()) : null;
+        if (taskId == null) {
+            return Result.paramError("任务ID不能为空");
+        }
+        List<Long> orgIds = (List<Long>) params.get("orgIds");
+        return learnTaskService.assignByOrgs(taskId, orgIds);
+    }
+
+    @PostMapping("/assignUsers")
+    @ApiOperation(value = "单独分配学员")
+    public Result<Void> assignUsers(@RequestBody Map<String, Object> params) {
+        Long taskId = params.get("taskId") != null ? Long.valueOf(params.get("taskId").toString()) : null;
+        if (taskId == null) {
+            return Result.paramError("任务ID不能为空");
+        }
+        List<Long> userIds = (List<Long>) params.get("userIds");
+        return learnTaskService.assignUsers(taskId, userIds);
+    }
+
+    @PutMapping("/archive/{id}")
+    @ApiOperation(value = "任务归档")
+    public Result<Void> archive(@PathVariable Long id, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return learnTaskService.archive(id, userId);
+    }
+
     private LearnTask buildTaskFromParams(Map<String, Object> params) {
         LearnTask task = new LearnTask();
         if (params.get("id") != null) {

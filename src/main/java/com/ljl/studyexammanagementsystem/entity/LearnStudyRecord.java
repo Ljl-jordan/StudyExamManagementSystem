@@ -5,14 +5,13 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
 @Entity
-@ApiModel(value = "LearnTaskUser", description = "学习任务用户关联")
-@Table(name = "learn_task_user")
-public class LearnTaskUser {
+@ApiModel(value = "LearnStudyRecord", description = "学习记录")
+@Table(name = "learn_study_record")
+public class LearnStudyRecord {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,22 +26,18 @@ public class LearnTaskUser {
     @ApiModelProperty(value = "用户ID")
     private Long userId;
 
-    @Column(name = "learn_status", nullable = false)
-    @ApiModelProperty(value = "学习状态：0未开始 1学习中 2已完成")
-    private Byte learnStatus;
+    @Column(name = "material_id", nullable = false)
+    @ApiModelProperty(value = "素材ID")
+    private Long materialId;
 
-    @Column(name = "learn_score", precision = 5, scale = 2)
-    @ApiModelProperty(value = "学习得分")
-    private BigDecimal learnScore;
+    @Column(name = "accumulated_time", nullable = false)
+    @ApiModelProperty(value = "累计学习时长（秒）")
+    private Integer accumulatedTime;
 
-    @Column(name = "signature_file_id")
-    @ApiModelProperty(value = "电子签名文件ID")
-    private Long signatureFileId;
-
-    @Column(name = "sign_time")
+    @Column(name = "last_report_time")
     @Temporal(TemporalType.TIMESTAMP)
-    @ApiModelProperty(value = "签名时间")
-    private Date signTime;
+    @ApiModelProperty(value = "最近上报时间")
+    private Date lastReportTime;
 
     @Column(name = "create_time", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)

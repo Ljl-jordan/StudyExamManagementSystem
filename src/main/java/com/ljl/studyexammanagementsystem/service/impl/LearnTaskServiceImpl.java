@@ -3,11 +3,14 @@ package com.ljl.studyexammanagementsystem.service.impl;
 import com.ljl.studyexammanagementsystem.entity.LearnTask;
 import com.ljl.studyexammanagementsystem.entity.LearnTaskMaterial;
 import com.ljl.studyexammanagementsystem.entity.LearnTaskUser;
+import com.ljl.studyexammanagementsystem.entity.SysUser;
 import com.ljl.studyexammanagementsystem.repository.LearnTaskMaterialRepository;
 import com.ljl.studyexammanagementsystem.repository.LearnTaskRepository;
 import com.ljl.studyexammanagementsystem.repository.LearnTaskUserRepository;
+import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
 import com.ljl.studyexammanagementsystem.service.LearnTaskService;
 import com.ljl.studyexammanagementsystem.utils.DataPermissionUtil;
+import com.ljl.studyexammanagementsystem.utils.MessageUtil;
 import com.ljl.studyexammanagementsystem.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LearnTaskServiceImpl implements LearnTaskService {
@@ -33,13 +37,19 @@ public class LearnTaskServiceImpl implements LearnTaskService {
     private LearnTaskUserRepository learnTaskUserRepository;
 
     @Autowired
+    private SysUserRepository sysUserRepository;
+
+    @Autowired
     private DataPermissionUtil dataPermissionUtil;
 
+    @Autowired
+    private MessageUtil messageUtil;
+
     /**
-     * 任务分页列表（带数据权限）
+     * 任务分页列表（支持按状态筛选 + 数据权限）
      */
     @Override
-    public Result<Page<LearnTask>> page(Integer pageNum, Integer pageSize, String keyword, Long userId, Long orgId) {
+    public Result<Page<LearnTask>> page(Integer pageNum, Integer pageSize, String keyword, Long taskStatus, Long userId, Long orgId) {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         Byte dataScope = dataPermissionUtil.getDataScope(userId);
 
@@ -48,6 +58,9 @@ public class LearnTaskServiceImpl implements LearnTaskService {
             predicates.add(cb.equal(root.get("isDelete"), (byte) 0));
             if (keyword != null && !keyword.trim().isEmpty()) {
                 predicates.add(cb.like(root.get("taskName"), "%" + keyword.trim() + "%"));
+            }
+            if (taskStatus != null) {
+                predicates.add(cb.equal(root.get("taskStatus"), taskStatus.byteValue()));
             }
             if (dataScope == 2) {
                 predicates.add(cb.equal(root.get("createUser"), userId));
@@ -60,7 +73,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
     }
 
     /**
-     * 任务详情（回显已绑定素材、分配人员）
+     * 任务详情
      */
     @Override
     public Result<LearnTask> detail(Long id, Long userId, Long orgId) {
@@ -77,32 +90,27 @@ public class LearnTaskServiceImpl implements LearnTaskService {
     @Override
     @Transactional
     public Result<Void> addDraft(LearnTask task, List<Long> materialIds, List<Long> userIds, Long createUserId) {
-        // 参数校验
         if (task.getTaskName() == null || task.getTaskName().trim().isEmpty()) {
             return Result.paramError("任务名称不能为空");
         }
-        // 起止时间校验
         if (task.getStartTime() != null && task.getEndTime() != null) {
             if (task.getEndTime().before(task.getStartTime())) {
                 return Result.paramError("结束时间不能早于开始时间");
             }
         }
-        // 素材绑定去重校验
         if (materialIds != null && hasDuplicate(materialIds)) {
             return Result.paramError("绑定素材存在重复");
         }
 
-        task.setTaskStatus((byte) 0); // 草稿
+        task.setTaskStatus((byte) 0);
         task.setCreateUser(createUserId);
         task.setCreateTime(new Date());
         task.setIsDelete((byte) 0);
         learnTaskRepository.save(task);
 
-        // 绑定素材
         if (materialIds != null && !materialIds.isEmpty()) {
             saveTaskMaterials(task.getId(), materialIds);
         }
-        // 绑定分配人员（草稿状态不生成消息）
         if (userIds != null && !userIds.isEmpty()) {
             saveTaskUsers(task.getId(), userIds);
         }
@@ -119,17 +127,14 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         if (existing == null || existing.getIsDelete() == 1) {
             return Result.paramError("任务不存在");
         }
-        // 仅草稿支持编辑
         if (existing.getTaskStatus() != 0) {
             return Result.businessBlock("已下发任务无法编辑");
         }
-        // 起止时间校验
         if (task.getStartTime() != null && task.getEndTime() != null) {
             if (task.getEndTime().before(task.getStartTime())) {
                 return Result.paramError("结束时间不能早于开始时间");
             }
         }
-        // 素材去重校验
         if (materialIds != null && hasDuplicate(materialIds)) {
             return Result.paramError("绑定素材存在重复");
         }
@@ -150,7 +155,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
 
-        // 更新素材绑定（先删后增）
         if (materialIds != null) {
             List<LearnTaskMaterial> oldMaterials = learnTaskMaterialRepository.findByTaskIdAndIsDelete(id, (byte) 0);
             for (LearnTaskMaterial ltm : oldMaterials) {
@@ -159,7 +163,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
             learnTaskMaterialRepository.saveAll(oldMaterials);
             saveTaskMaterials(id, materialIds);
         }
-        // 更新分配人员
         if (userIds != null) {
             List<LearnTaskUser> oldUsers = learnTaskUserRepository.findByTaskIdAndIsDelete(id, (byte) 0);
             for (LearnTaskUser ltu : oldUsers) {
@@ -181,7 +184,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         if (existing == null || existing.getIsDelete() == 1) {
             return Result.paramError("任务不存在");
         }
-        // 仅草稿支持删除
         if (existing.getTaskStatus() != 0) {
             return Result.businessBlock("已下发任务无法删除");
         }
@@ -189,7 +191,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
 
-        // 同步删除关联素材和人员
         List<LearnTaskMaterial> materials = learnTaskMaterialRepository.findByTaskIdAndIsDelete(id, (byte) 0);
         for (LearnTaskMaterial ltm : materials) {
             ltm.setIsDelete((byte) 1);
@@ -206,8 +207,139 @@ public class LearnTaskServiceImpl implements LearnTaskService {
     }
 
     /**
-     * 保存任务素材关联（去重）
+     * 任务下发（事务控制 + 自动推送消息）
+     * 状态流转：草稿(0) → 已下发(1)
+     * 下发后锁定编辑和删除
      */
+    @Override
+    @Transactional
+    public Result<Void> publish(Long id, Long userId) {
+        LearnTask existing = learnTaskRepository.findById(id).orElse(null);
+        if (existing == null || existing.getIsDelete() == 1) {
+            return Result.paramError("任务不存在");
+        }
+        if (existing.getTaskStatus() != 0) {
+            return Result.businessBlock("仅草稿状态可下发");
+        }
+        // 校验必须有分配人员
+        List<LearnTaskUser> taskUsers = learnTaskUserRepository.findByTaskIdAndIsDelete(id, (byte) 0);
+        if (taskUsers.isEmpty()) {
+            return Result.paramError("请先分配学员后再下发");
+        }
+
+        // 状态变更为已下发
+        existing.setTaskStatus((byte) 1);
+        existing.setUpdateUser(userId);
+        existing.setUpdateTime(new Date());
+        learnTaskRepository.save(existing);
+
+        // 事务内批量生成消息（任意异常则整体回滚）
+        List<Long> receiveUserIds = taskUsers.stream()
+                .map(LearnTaskUser::getUserId)
+                .collect(Collectors.toList());
+        messageUtil.pushBatch(receiveUserIds, "learnTask", id,
+                "学习任务下发通知", "您有新的学习任务：" + existing.getTaskName() + "，请及时完成。");
+
+        return Result.success("下发成功", null);
+    }
+
+    /**
+     * 批量按组织分配学员
+     * 查询组织下全部学员，去重后新增分配关系
+     */
+    @Override
+    @Transactional
+    public Result<Void> assignByOrgs(Long taskId, List<Long> orgIds) {
+        LearnTask existing = learnTaskRepository.findById(taskId).orElse(null);
+        if (existing == null || existing.getIsDelete() == 1) {
+            return Result.paramError("任务不存在");
+        }
+        if (existing.getTaskStatus() != 0 && existing.getTaskStatus() != 1) {
+            return Result.businessBlock("已归档任务无法分配");
+        }
+        if (orgIds == null || orgIds.isEmpty()) {
+            return Result.paramError("组织ID列表不能为空");
+        }
+
+        // 查询指定组织下所有学员
+        List<SysUser> allUsers = new ArrayList<>();
+        for (Long orgId : orgIds) {
+            allUsers.addAll(sysUserRepository.findByOrgIdAndIsDelete(orgId, (byte) 0));
+        }
+        if (allUsers.isEmpty()) {
+            return Result.paramError("所选组织下无可用学员");
+        }
+
+        // 查询已分配学员，去重
+        List<LearnTaskUser> alreadyAssigned = learnTaskUserRepository.findByTaskIdAndIsDelete(taskId, (byte) 0);
+        Set<Long> assignedUserIds = alreadyAssigned.stream()
+                .map(LearnTaskUser::getUserId)
+                .collect(Collectors.toSet());
+
+        List<Long> newUserIds = allUsers.stream()
+                .map(u -> u.getId())
+                .filter(uid -> !assignedUserIds.contains(uid))
+                .collect(Collectors.toList());
+
+        if (!newUserIds.isEmpty()) {
+            saveTaskUsers(taskId, newUserIds);
+        }
+        return Result.success("分配成功，共分配" + newUserIds.size() + "名学员", null);
+    }
+
+    /**
+     * 单独分配学员
+     * 去重后新增分配关系
+     */
+    @Override
+    @Transactional
+    public Result<Void> assignUsers(Long taskId, List<Long> userIds) {
+        LearnTask existing = learnTaskRepository.findById(taskId).orElse(null);
+        if (existing == null || existing.getIsDelete() == 1) {
+            return Result.paramError("任务不存在");
+        }
+        if (existing.getTaskStatus() != 0 && existing.getTaskStatus() != 1) {
+            return Result.businessBlock("已归档任务无法分配");
+        }
+        if (userIds == null || userIds.isEmpty()) {
+            return Result.paramError("用户ID列表不能为空");
+        }
+
+        List<LearnTaskUser> alreadyAssigned = learnTaskUserRepository.findByTaskIdAndUserIdInAndIsDelete(taskId, userIds, (byte) 0);
+        Set<Long> assignedUserIds = alreadyAssigned.stream()
+                .map(LearnTaskUser::getUserId)
+                .collect(Collectors.toSet());
+
+        List<Long> newUserIds = userIds.stream()
+                .filter(uid -> !assignedUserIds.contains(uid))
+                .collect(Collectors.toList());
+
+        if (!newUserIds.isEmpty()) {
+            saveTaskUsers(taskId, newUserIds);
+        }
+        return Result.success("分配成功，共分配" + newUserIds.size() + "名学员", null);
+    }
+
+    /**
+     * 任务归档（已下发 → 已结束）
+     */
+    @Override
+    @Transactional
+    public Result<Void> archive(Long id, Long userId) {
+        LearnTask existing = learnTaskRepository.findById(id).orElse(null);
+        if (existing == null || existing.getIsDelete() == 1) {
+            return Result.paramError("任务不存在");
+        }
+        if (existing.getTaskStatus() != 1) {
+            return Result.businessBlock("仅已下发状态可归档");
+        }
+        existing.setTaskStatus((byte) 2);
+        existing.setUpdateUser(userId);
+        existing.setUpdateTime(new Date());
+        learnTaskRepository.save(existing);
+        return Result.success("归档成功", null);
+    }
+
     private void saveTaskMaterials(Long taskId, List<Long> materialIds) {
         Set<Long> added = new HashSet<>();
         int sort = 0;
@@ -224,9 +356,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         }
     }
 
-    /**
-     * 保存任务用户关联
-     */
     private void saveTaskUsers(Long taskId, List<Long> userIds) {
         for (Long userId : userIds) {
             LearnTaskUser ltu = new LearnTaskUser();
@@ -239,9 +368,6 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         }
     }
 
-    /**
-     * 检查列表中是否有重复元素
-     */
     private boolean hasDuplicate(List<Long> list) {
         Set<Long> set = new HashSet<>(list);
         return set.size() != list.size();

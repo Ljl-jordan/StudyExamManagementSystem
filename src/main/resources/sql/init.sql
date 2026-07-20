@@ -306,6 +306,8 @@ CREATE TABLE `learn_task_user` (
                                    `user_id` bigint NOT NULL COMMENT '用户ID，关联sys_user.id',
                                    `learn_status` tinyint NOT NULL DEFAULT 0 COMMENT '学习状态：0未开始 1学习中 2已完成',
                                    `learn_score` decimal(5,2) DEFAULT NULL COMMENT '学习得分',
+                                   `signature_file_id` bigint DEFAULT NULL COMMENT '电子签名文件ID',
+                                   `sign_time` datetime DEFAULT NULL COMMENT '签名时间',
                                    `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                    `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                                    `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
@@ -314,6 +316,40 @@ CREATE TABLE `learn_task_user` (
                                    KEY idx_user_id (`user_id`),
                                    KEY idx_is_delete (`is_delete`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习任务用户关联表';
+
+
+-- ... existing code ...
+
+-- ====================== 学习记录表 learn_study_record ======================
+CREATE TABLE `learn_study_record` (
+                                      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                      `task_id` bigint NOT NULL COMMENT '任务ID，关联learn_task.id',
+                                      `user_id` bigint NOT NULL COMMENT '用户ID，关联sys_user.id',
+                                      `material_id` bigint NOT NULL COMMENT '素材ID，关联kb_material.id',
+                                      `accumulated_time` int NOT NULL DEFAULT 0 COMMENT '累计学习时长（秒）',
+                                      `last_report_time` datetime DEFAULT NULL COMMENT '最近上报时间',
+                                      `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                      `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                      `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                                      PRIMARY KEY (`id`),
+                                      UNIQUE KEY uk_task_user_material (`task_id`, `user_id`, `material_id`),
+                                      KEY idx_task_user (`task_id`, `user_id`),
+                                      KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='学习记录表';
+
+-- ====================== 电子签名表 learn_task_signature ======================
+CREATE TABLE `learn_task_signature` (
+                                        `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                        `task_id` bigint NOT NULL COMMENT '任务ID，关联learn_task.id',
+                                        `user_id` bigint NOT NULL COMMENT '用户ID，关联sys_user.id',
+                                        `file_id` bigint NOT NULL COMMENT '签名文件ID，关联sys_file.id',
+                                        `sign_time` datetime DEFAULT NULL COMMENT '签名时间',
+                                        `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                        `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                                        PRIMARY KEY (`id`),
+                                        UNIQUE KEY uk_task_user (`task_id`, `user_id`),
+                                        KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='电子签名表';
 
 
 
