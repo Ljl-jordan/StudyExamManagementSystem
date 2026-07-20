@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -50,5 +51,50 @@ public class LearnStudyRecordController {
             return Result.paramError("任务ID不能为空");
         }
         return learnStudyRecordService.submitSignature(taskId, userId, fileId);
+    }
+
+    @GetMapping("/detail")
+    @ApiOperation(value = "学习明细分页查询", notes = "支持按任务、组织、用户、时间范围筛选；基于数据权限自动过滤；返回组织名、用户名、任务名、素材名、学时、签名状态")
+    public Result<Map<String, Object>> detail(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) Long taskId,
+            @RequestParam(required = false) Long orgId,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        Long currentOrgId = (Long) request.getAttribute("orgId");
+        return learnStudyRecordService.detailPage(pageNum, pageSize, taskId, orgId, userId, startTime, endTime, currentUserId, currentOrgId);
+    }
+
+    @GetMapping("/export/sync")
+    @ApiOperation(value = "同步导出学习台账Excel", notes = "最多导出5000条，超过返回405；导出字段：组织、用户、任务、素材、学时、签名状态")
+    public void exportSync(
+            @RequestParam(required = false) Long taskId,
+            @RequestParam(required = false) Long orgId,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        Long currentOrgId = (Long) request.getAttribute("orgId");
+        learnStudyRecordService.exportSyncExcel(taskId, orgId, userId, startTime, endTime, currentUserId, currentOrgId, response);
+    }
+
+    @PostMapping("/export/async")
+    @ApiOperation(value = "异步导出学习台账Excel", notes = "任务入库后异步处理，完成后推送消息通知下载")
+    public Result<Void> exportAsync(
+            @RequestParam(required = false) Long taskId,
+            @RequestParam(required = false) Long orgId,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            HttpServletRequest request) {
+        Long currentUserId = (Long) request.getAttribute("userId");
+        Long currentOrgId = (Long) request.getAttribute("orgId");
+        return learnStudyRecordService.exportAsyncExcel(taskId, orgId, userId, startTime, endTime, currentUserId, currentOrgId);
     }
 }

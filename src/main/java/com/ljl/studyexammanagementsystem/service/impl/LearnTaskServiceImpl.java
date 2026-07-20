@@ -89,7 +89,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
      */
     @Override
     @Transactional
-    public Result<Void> addDraft(LearnTask task, List<Long> materialIds, List<Long> userIds, Long createUserId) {
+    public Result<Long> addDraft(LearnTask task, List<Long> materialIds, List<Long> userIds, Long createUserId) {
         if (task.getTaskName() == null || task.getTaskName().trim().isEmpty()) {
             return Result.paramError("任务名称不能为空");
         }
@@ -114,7 +114,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         if (userIds != null && !userIds.isEmpty()) {
             saveTaskUsers(task.getId(), userIds);
         }
-        return Result.success("新增成功", null);
+        return Result.success("新增成功", task.getId());
     }
 
     /**

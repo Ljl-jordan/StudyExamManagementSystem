@@ -10,8 +10,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/learn/task")
@@ -44,12 +46,15 @@ public class LearnTaskController {
 
     @PostMapping("/add")
     @ApiOperation(value = "新建草稿任务")
-    public Result<Void> add(@RequestBody Map<String, Object> params, HttpServletRequest request) {
+    public Result<Map<String, Object>> add(@RequestBody Map<String, Object> params, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         LearnTask task = buildTaskFromParams(params);
-        List<Long> materialIds = (List<Long>) params.get("materialIds");
-        List<Long> userIds = (List<Long>) params.get("userIds");
-        return learnTaskService.addDraft(task, materialIds, userIds, userId);
+        List<Long> materialIds = toLongList(params.get("materialIds"));
+        List<Long> userIds = toLongList(params.get("userIds"));
+        Result<Long> result = learnTaskService.addDraft(task, materialIds, userIds, userId);
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("taskId", result.getData());
+        return Result.success(result.getMsg(),data);
     }
 
     @PutMapping("/edit")
@@ -61,8 +66,8 @@ public class LearnTaskController {
             return Result.paramError("任务ID不能为空");
         }
         LearnTask task = buildTaskFromParams(params);
-        List<Long> materialIds = (List<Long>) params.get("materialIds");
-        List<Long> userIds = (List<Long>) params.get("userIds");
+        List<Long> materialIds = toLongList(params.get("materialIds"));
+        List<Long> userIds = toLongList(params.get("userIds"));
         return learnTaskService.update(id, task, materialIds, userIds, userId);
     }
 
@@ -86,7 +91,7 @@ public class LearnTaskController {
         if (taskId == null) {
             return Result.paramError("任务ID不能为空");
         }
-        List<Long> orgIds = (List<Long>) params.get("orgIds");
+        List<Long> orgIds = toLongList(params.get("orgIds"));
         return learnTaskService.assignByOrgs(taskId, orgIds);
     }
 
@@ -97,7 +102,7 @@ public class LearnTaskController {
         if (taskId == null) {
             return Result.paramError("任务ID不能为空");
         }
-        List<Long> userIds = (List<Long>) params.get("userIds");
+        List<Long> userIds = toLongList(params.get("userIds"));
         return learnTaskService.assignUsers(taskId, userIds);
     }
 
@@ -119,6 +124,24 @@ public class LearnTaskController {
         if (params.get("taskDesc") != null) {
             task.setTaskDesc(params.get("taskDesc").toString());
         }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            if (params.get("startTime") != null) {
+                task.setStartTime(sdf.parse(params.get("startTime").toString()));
+            }
+            if (params.get("endTime") != null) {
+                task.setEndTime(sdf.parse(params.get("endTime").toString()));
+            }
+        } catch (Exception e) {
+        }
         return task;
+    }
+    //新增toLongList方法，将List<Number>转换为List<Long>
+
+    //将前端传来的 Object 类型 ID 集合统一转换成 Long 类型 ID 列表，用于批量操作接口处理批量 ID 参数。
+    private List<Long> toLongList(Object obj) {
+        if (obj == null) return null;
+        List<?> list = (List<?>) obj;//强转为泛型未知类型
+        return list.stream().map(o -> Long.valueOf(o.toString())).collect(Collectors.toList());
     }
 }

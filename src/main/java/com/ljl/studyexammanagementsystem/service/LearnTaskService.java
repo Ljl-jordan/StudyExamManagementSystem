@@ -12,7 +12,7 @@ public interface LearnTaskService {
 
     Result<LearnTask> detail(Long id, Long userId, Long orgId);
 
-    Result<Void> addDraft(LearnTask task, List<Long> materialIds, List<Long> userIds, Long createUserId);
+    Result<Long> addDraft(LearnTask task, List<Long> materialIds, List<Long> userIds, Long createUserId);
 
     Result<Void> update(Long id, LearnTask task, List<Long> materialIds, List<Long> userIds, Long updateUserId);
 
