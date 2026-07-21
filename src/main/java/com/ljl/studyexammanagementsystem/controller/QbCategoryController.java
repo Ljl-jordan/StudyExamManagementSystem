@@ -7,6 +7,8 @@ import com.ljl.studyexammanagementsystem.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/qbCategory")
 public class QbCategoryController {
@@ -21,9 +23,9 @@ public class QbCategoryController {
      * 获取分类树形结构
      */
     @GetMapping("/tree")
-    public Result<?> getTree() {
-        Long userId = dataPermissionUtil.getCurrentUserId();
-        Long orgId = dataPermissionUtil.getCurrentUserOrgId();
+    public Result<?> getTree(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        Long orgId = (Long) request.getAttribute("orgId");
         return qbCategoryService.getTree(userId, orgId);
     }
 
@@ -33,9 +35,10 @@ public class QbCategoryController {
     @GetMapping("/page")
     public Result<?> page(@RequestParam(defaultValue = "1") Integer pageNum,
                           @RequestParam(defaultValue = "10") Integer pageSize,
-                          @RequestParam(required = false) String keyword) {
-        Long userId = dataPermissionUtil.getCurrentUserId();
-        Long orgId = dataPermissionUtil.getCurrentUserOrgId();
+                          @RequestParam(required = false) String keyword,
+                          HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        Long orgId = (Long) request.getAttribute("orgId");
         return qbCategoryService.page(pageNum, pageSize, keyword, userId, orgId);
     }
 
@@ -43,9 +46,9 @@ public class QbCategoryController {
      * 新增分类
      */
     @PostMapping("/add")
-    public Result<?> add(@RequestBody QbCategory category) {
-        Long userId = dataPermissionUtil.getCurrentUserId();
-        Long orgId = dataPermissionUtil.getCurrentUserOrgId();
+    public Result<?> add(@RequestBody QbCategory category, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        Long orgId = (Long) request.getAttribute("orgId");
         return qbCategoryService.add(category, userId, orgId);
     }
 
@@ -53,8 +56,8 @@ public class QbCategoryController {
      * 编辑分类
      */
     @PutMapping("/update/{id}")
-    public Result<?> update(@PathVariable Long id, @RequestBody QbCategory category) {
-        Long userId = dataPermissionUtil.getCurrentUserId();
+    public Result<?> update(@PathVariable Long id, @RequestBody QbCategory category, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
         return qbCategoryService.update(id, category, userId);
     }
 
