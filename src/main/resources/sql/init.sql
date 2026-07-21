@@ -352,6 +352,98 @@ CREATE TABLE `learn_task_signature` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='电子签名表';
 
 
+-- ====================== 题库分类表 qb_category ======================
+CREATE TABLE `qb_category` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                               `parent_id` bigint NOT NULL DEFAULT 0 COMMENT '上级分类ID，顶级分类默认0',
+                               `category_name` varchar(50) NOT NULL COMMENT '分类名称，同级唯一',
+                               `sort_order` int DEFAULT 0 COMMENT '排序序号',
+                               `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                               `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                               PRIMARY KEY (`id`),
+                               KEY idx_parent_id (`parent_id`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='题库分类表';
+
+-- ====================== 试题主表 qb_question ======================
+CREATE TABLE `qb_question` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                               `question_title` varchar(500) NOT NULL COMMENT '题干',
+                               `question_type` tinyint NOT NULL COMMENT '题型：1单选题 2多选题 3判断题 4填空题 5简答题',
+                               `difficulty_level` tinyint NOT NULL COMMENT '难度等级：1简单 2一般 3困难',
+                               `score` decimal(5,2) NOT NULL COMMENT '题目分值',
+                               `category_id` bigint NOT NULL COMMENT '所属分类ID，关联qb_category.id',
+                               `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                               `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                               PRIMARY KEY (`id`),
+                               KEY idx_category_id (`category_id`),
+                               KEY idx_question_type (`question_type`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试题主表';
+
+-- ====================== 单选题附表 qb_question_single ======================
+CREATE TABLE `qb_question_single` (
+                                      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                      `question_id` bigint NOT NULL COMMENT '关联试题ID，关联qb_question.id',
+                                      `option_a` varchar(500) DEFAULT NULL COMMENT '选项A',
+                                      `option_b` varchar(500) DEFAULT NULL COMMENT '选项B',
+                                      `option_c` varchar(500) DEFAULT NULL COMMENT '选项C',
+                                      `option_d` varchar(500) DEFAULT NULL COMMENT '选项D',
+                                      `correct_answer` varchar(10) NOT NULL COMMENT '正确答案(A/B/C/D)',
+                                      PRIMARY KEY (`id`),
+                                      UNIQUE KEY uk_question_id (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='单选题附表';
+
+-- ====================== 多选题附表 qb_question_multiple ======================
+CREATE TABLE `qb_question_multiple` (
+                                        `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                        `question_id` bigint NOT NULL COMMENT '关联试题ID，关联qb_question.id',
+                                        `option_a` varchar(500) DEFAULT NULL COMMENT '选项A',
+                                        `option_b` varchar(500) DEFAULT NULL COMMENT '选项B',
+                                        `option_c` varchar(500) DEFAULT NULL COMMENT '选项C',
+                                        `option_d` varchar(500) DEFAULT NULL COMMENT '选项D',
+                                        `option_e` varchar(500) DEFAULT NULL COMMENT '选项E',
+                                        `option_f` varchar(500) DEFAULT NULL COMMENT '选项F',
+                                        `correct_answer` varchar(20) NOT NULL COMMENT '正确答案(多个选项用逗号分隔)',
+                                        PRIMARY KEY (`id`),
+                                        UNIQUE KEY uk_question_id (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='多选题附表';
+
+-- ====================== 判断题附表 qb_question_judge ======================
+CREATE TABLE `qb_question_judge` (
+                                     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                     `question_id` bigint NOT NULL COMMENT '关联试题ID，关联qb_question.id',
+                                     `correct_answer` tinyint(1) NOT NULL COMMENT '正确答案(1正确/0错误)',
+                                     PRIMARY KEY (`id`),
+                                     UNIQUE KEY uk_question_id (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='判断题附表';
+
+-- ====================== 填空题附表 qb_question_blank ======================
+CREATE TABLE `qb_question_blank` (
+                                     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                     `question_id` bigint NOT NULL COMMENT '关联试题ID，关联qb_question.id',
+                                     `blank_count` int NOT NULL COMMENT '填空数量',
+                                     `answer_json` text NOT NULL COMMENT '答案JSON数组',
+                                     PRIMARY KEY (`id`),
+                                     UNIQUE KEY uk_question_id (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='填空题附表';
+
+-- ====================== 简答题附表 qb_question_essay ======================
+CREATE TABLE `qb_question_essay` (
+                                     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                                     `question_id` bigint NOT NULL COMMENT '关联试题ID，关联qb_question.id',
+                                     `reference_answer` text NOT NULL COMMENT '参考答案',
+                                     PRIMARY KEY (`id`),
+                                     UNIQUE KEY uk_question_id (`question_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简答题附表';
+
+
 
 -- ====================== 菜单权限表 sys_menu（完整初始数据） ======================
 INSERT INTO sys_menu (id, parent_id, menu_name, route, button_perms, sort, create_time, update_time, is_delete) VALUES

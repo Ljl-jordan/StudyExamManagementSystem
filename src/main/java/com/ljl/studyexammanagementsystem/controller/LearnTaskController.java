@@ -36,7 +36,7 @@ public class LearnTaskController {
         return learnTaskService.page(pageNum, pageSize, keyword, taskStatus, userId, orgId);
     }
 
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     @ApiOperation(value = "任务详情")
     public Result<LearnTask> detail(@PathVariable Long id, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
@@ -57,14 +57,11 @@ public class LearnTaskController {
         return Result.success(result.getMsg(),data);
     }
 
-    @PutMapping("/edit")
+    @PutMapping("/edit/{id}")  // 修改路径：添加{id}路径参数
     @ApiOperation(value = "编辑任务（仅草稿）")
-    public Result<Void> edit(@RequestBody Map<String, Object> params, HttpServletRequest request) {
+    public Result<Void> edit(@PathVariable Long id, @RequestBody Map<String, Object> params, HttpServletRequest request) {  // 添加@PathVariable Long id
         Long userId = (Long) request.getAttribute("userId");
-        Long id = params.get("id") != null ? Long.valueOf(params.get("id").toString()) : null;
-        if (id == null) {
-            return Result.paramError("任务ID不能为空");
-        }
+        // 移除从params获取id的逻辑，直接使用路径参数id
         LearnTask task = buildTaskFromParams(params);
         List<Long> materialIds = toLongList(params.get("materialIds"));
         List<Long> userIds = toLongList(params.get("userIds"));
@@ -84,9 +81,9 @@ public class LearnTaskController {
         return learnTaskService.publish(id, userId);
     }
 
-    @PostMapping("/assignByOrg")
+    @PostMapping("/allotOrg")  // 修改路径：assignByOrg → allotOrg
     @ApiOperation(value = "批量按组织分配学员")
-    public Result<Void> assignByOrgs(@RequestBody Map<String, Object> params) {
+    public Result<Void> assignByOrgs(@RequestBody Map<String, Object> params) {  // 方法名可保留，内部逻辑不变
         Long taskId = params.get("taskId") != null ? Long.valueOf(params.get("taskId").toString()) : null;
         if (taskId == null) {
             return Result.paramError("任务ID不能为空");
@@ -95,9 +92,9 @@ public class LearnTaskController {
         return learnTaskService.assignByOrgs(taskId, orgIds);
     }
 
-    @PostMapping("/assignUsers")
+    @PostMapping("/allotUser")  // 修改路径：assignUsers → allotUser
     @ApiOperation(value = "单独分配学员")
-    public Result<Void> assignUsers(@RequestBody Map<String, Object> params) {
+    public Result<Void> assignUsers(@RequestBody Map<String, Object> params) {  // 方法名可保留，内部逻辑不变
         Long taskId = params.get("taskId") != null ? Long.valueOf(params.get("taskId").toString()) : null;
         if (taskId == null) {
             return Result.paramError("任务ID不能为空");
