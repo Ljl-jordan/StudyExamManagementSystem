@@ -443,6 +443,51 @@ CREATE TABLE `qb_question_essay` (
                                      UNIQUE KEY uk_question_id (`question_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简答题附表';
 
+-- ... existing code ...
+
+-- ====================== 试卷表 exam_paper ======================
+CREATE TABLE `exam_paper` (
+                              `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                              `paper_title` varchar(200) NOT NULL COMMENT '试卷标题',
+                              `paper_type` tinyint NOT NULL COMMENT '试卷类型：1练习卷 2正式考试',
+                              `total_score` decimal(10,2) DEFAULT NULL COMMENT '总分',
+                              `passing_score` decimal(10,2) DEFAULT NULL COMMENT '及格分',
+                              `duration_minutes` int DEFAULT NULL COMMENT '时长（分钟）',
+                              `start_time` datetime DEFAULT NULL COMMENT '开始时间',
+                              `end_time` datetime DEFAULT NULL COMMENT '结束时间',
+                              `paper_status` tinyint NOT NULL COMMENT '试卷状态：0草稿 1已发布 2已归档',
+                              `publish_time` datetime DEFAULT NULL COMMENT '发布时间',
+                              `create_user` bigint DEFAULT NULL COMMENT '创建用户ID',
+                              `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                              `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                              `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                              `exam_description` varchar(1000) DEFAULT NULL COMMENT '考试描述',
+                              PRIMARY KEY (`id`),
+                              KEY idx_create_user (`create_user`),
+                              KEY idx_paper_status (`paper_status`),
+                              KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试卷表';
+
+-- ... existing code ...
+-- ====================== 试题主表 qb_question ======================
+CREATE TABLE `qb_question` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
+                               `question_title` varchar(500) NOT NULL COMMENT '题干',
+                               `question_type` tinyint NOT NULL COMMENT '题型：1单选题 2多选题 3判断题 4填空题 5简答题',
+                               `difficulty_level` tinyint NOT NULL COMMENT '难度等级：1简单 2一般 3困难',
+                               `score` decimal(5,2) NOT NULL COMMENT '题目分值',
+                               `category_id` bigint NOT NULL COMMENT '所属分类ID，关联qb_category.id',
+                               `create_user` bigint DEFAULT NULL COMMENT '创建人用户ID',
+                               `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                               `update_user` bigint DEFAULT NULL COMMENT '更新人用户ID',
+                               `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                               `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0正常、1已删除',
+                               `analysis` TEXT COMMENT '试题解析',
+                               PRIMARY KEY (`id`),
+                               KEY idx_category_id (`category_id`),
+                               KEY idx_question_type (`question_type`),
+                               KEY idx_is_delete (`is_delete`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='试题主表';
 
 
 -- ====================== 菜单权限表 sys_menu（完整初始数据） ======================

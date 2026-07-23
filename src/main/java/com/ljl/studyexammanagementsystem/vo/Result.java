@@ -61,6 +61,10 @@ public class Result<T> implements Serializable {
         return new Result<>(code, msg, null);
     }
 
+    public static Result<String> error(String msg) {
+        return new Result(CODE_SERVER_ERROR, msg, null);
+    }
+
     public Integer getCode() {
         return code;
     }

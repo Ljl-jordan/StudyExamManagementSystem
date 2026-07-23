@@ -3,6 +3,7 @@ package com.ljl.studyexammanagementsystem.configure;
 
 import com.ljl.studyexammanagementsystem.repository.SysUserRepository;
 import com.ljl.studyexammanagementsystem.entity.SysUser;
+import com.ljl.studyexammanagementsystem.service.ExamAnswerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class ScheduleTask {
 
     @Autowired
     private SysUserRepository sysUserRepository;
+
+    @Autowired
+    private ExamAnswerService examAnswerService;
 
     /**
      * 每小时执行一次：检查锁定超过24小时的账号，自动禁用
@@ -45,6 +49,34 @@ public class ScheduleTask {
         }
         if (count > 0) {
             log.info("本次定时任务共自动禁用{}个账号", count);
+        }
+    }
+
+    /**
+     * 每5分钟执行一次：自动交卷超时的试卷
+     */
+    @Scheduled(fixedRate = 300000) // 5分钟
+    public void autoSubmitExpiredPapers() {
+        log.info("开始执行自动交卷定时任务");
+        try {
+            examAnswerService.autoSubmitExpiredPapers();
+            log.info("自动交卷定时任务执行完成");
+        } catch (Exception e) {
+            log.error("自动交卷定时任务执行异常", e);
+        }
+    }
+
+    /**
+     * 每10分钟执行一次：自动判分客观题
+     */
+    @Scheduled(fixedRate = 600000) // 10分钟
+    public void autoGradeObjectiveQuestions() {
+        log.info("开始执行客观题自动判分定时任务");
+        try {
+            examAnswerService.autoGradeObjectiveQuestions();
+            log.info("客观题自动判分定时任务执行完成");
+        } catch (Exception e) {
+            log.error("客观题自动判分定时任务执行异常", e);
         }
     }
 }

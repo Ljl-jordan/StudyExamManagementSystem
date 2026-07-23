@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface QbQuestionRepository extends JpaRepository<QbQuestion, Long>, JpaSpecificationExecutor<QbQuestion> {
 
@@ -17,6 +19,12 @@ public interface QbQuestionRepository extends JpaRepository<QbQuestion, Long>, J
 
     @Query("SELECT q FROM QbQuestion q WHERE q.id = :id AND q.isDelete = 0")
     QbQuestion findByIdAndNotDeleted(@Param("id") Long id);
+
+    @Query("SELECT q FROM QbQuestion q WHERE q.questionTitle = :questionTitle AND q.categoryId = :categoryId AND q.isDelete = 0")
+    List<QbQuestion> findByQuestionTitleAndCategoryId(@Param("questionTitle") String questionTitle, @Param("categoryId") Long categoryId);
+
+    @Query("SELECT q FROM QbQuestion q WHERE q.id IN :ids AND q.isDelete = :isDelete")
+    List<QbQuestion> findByIdInAndIsDelete(@Param("ids") List<Long> ids, @Param("isDelete") Byte isDelete);
 
     long countByCategoryId(Long id);
 }

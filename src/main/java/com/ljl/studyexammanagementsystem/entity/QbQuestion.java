@@ -59,4 +59,9 @@ public class QbQuestion {
     @Column(name = "is_delete", nullable = false)
     @ApiModelProperty(value = "逻辑删除标志")
     private Byte isDelete;
+
+
+    @Column(name = "analysis", columnDefinition = "TEXT")
+    @ApiModelProperty(value = "试题解析")
+    private String analysis;
 }
