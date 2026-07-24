@@ -56,12 +56,17 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         Specification<LearnTask> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("isDelete"), (byte) 0));
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                predicates.add(cb.like(root.get("taskName"), "%" + keyword.trim() + "%"));
-            }
+
+            // 如果指定了特定状态，按指定状态查询
+            // 如果未指定状态，则包含所有状态（包括已归档）
             if (taskStatus != null) {
                 predicates.add(cb.equal(root.get("taskStatus"), taskStatus.byteValue()));
             }
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                predicates.add(cb.like(root.get("taskName"), "%" + keyword.trim() + "%"));
+            }
+
             if (dataScope == 2) {
                 predicates.add(cb.equal(root.get("createUser"), userId));
             }
@@ -333,6 +338,14 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         if (existing.getTaskStatus() != 1) {
             return Result.businessBlock("仅已下发状态可归档");
         }
+
+        // 检查是否有学员正在学习此任务（即学习状态为"学习中"）
+        List<LearnTaskUser> learningUsers = learnTaskUserRepository.findByTaskIdAndLearnStatusAndIsDelete(
+                id, (byte) 1, (byte) 0); // 1表示"学习中"
+        if (!learningUsers.isEmpty()) {
+            return Result.businessBlock("该任务有学员正在学习中，无法归档，请等待学员完成后再操作");
+        }
+
         existing.setTaskStatus((byte) 2);
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());

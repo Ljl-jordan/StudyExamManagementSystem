@@ -646,3 +646,88 @@ VALUES (1,2,NULL,NOW(),NULL,NOW(),0);
 --     id bigint auto_increment primary key
 -- );
 
+
+
+-- 索引优化SQL脚本
+
+-- 1. 用户表索引优化
+CREATE INDEX idx_sys_user_login_account ON sys_user(login_account);
+CREATE INDEX idx_sys_user_org_id ON sys_user(org_id);
+CREATE INDEX idx_sys_user_status ON sys_user(user_status);
+CREATE INDEX idx_sys_user_lock_time ON sys_user(lock_time);
+CREATE INDEX idx_sys_user_create_time ON sys_user(create_time);
+
+-- 2. 试卷表索引优化
+CREATE INDEX idx_exam_paper_title ON exam_paper(paper_title);
+CREATE INDEX idx_exam_paper_status ON exam_paper(paper_status);
+CREATE INDEX idx_exam_paper_start_time ON exam_paper(start_time);
+CREATE INDEX idx_exam_paper_end_time ON exam_paper(end_time);
+CREATE INDEX idx_exam_paper_create_time ON exam_paper(create_time);
+
+-- 3. 答卷表索引优化
+CREATE INDEX idx_exam_answer_sheet_paper_id ON exam_answer_sheet(paper_id);
+CREATE INDEX idx_exam_answer_sheet_user_id ON exam_answer_sheet(user_id);
+CREATE INDEX idx_exam_answer_sheet_status ON exam_answer_sheet(status);
+CREATE INDEX idx_exam_answer_sheet_start_time ON exam_answer_sheet(start_time);
+CREATE INDEX idx_exam_answer_sheet_submit_time ON exam_answer_sheet(submit_time);
+
+-- 4. 答题记录表索引优化
+CREATE INDEX idx_exam_answer_record_sheet_id ON exam_answer_record(answer_sheet_id);
+CREATE INDEX idx_exam_answer_record_question_id ON exam_answer_record(question_id);
+CREATE INDEX idx_exam_answer_record_sheet_question ON exam_answer_record(answer_sheet_id, question_id);
+
+-- 5. 试题表索引优化
+CREATE INDEX idx_qb_question_category_id ON qb_question(category_id);
+CREATE INDEX idx_qb_question_type ON qb_question(question_type);
+CREATE INDEX idx_qb_question_creator ON qb_question(create_user);
+CREATE INDEX idx_qb_question_title ON qb_question(question_title);
+
+-- 6. 学习任务表索引优化
+CREATE INDEX idx_learn_task_status ON learn_task(task_status);
+CREATE INDEX idx_learn_task_start_time ON learn_task(start_time);
+CREATE INDEX idx_learn_task_end_time ON learn_task(end_time);
+CREATE INDEX idx_learn_task_create_user ON learn_task(create_user);
+CREATE INDEX idx_learn_task_create_time ON learn_task(create_time);
+
+-- 7. 学习任务用户关联表索引优化
+CREATE INDEX idx_learn_task_user_task_id ON learn_task_user(task_id);
+CREATE INDEX idx_learn_task_user_user_id ON learn_task_user(user_id);
+CREATE INDEX idx_learn_task_user_status ON learn_task_user(learn_status);
+CREATE INDEX idx_learn_task_user_task_user ON learn_task_user(task_id, user_id);
+
+-- 8. 知识库素材表索引优化
+CREATE INDEX idx_kb_material_category_id ON kb_material(category_id);
+CREATE INDEX idx_kb_material_title ON kb_material(material_title);
+CREATE INDEX idx_kb_material_creator ON kb_material(create_user);
+
+-- 9. 消息表索引优化
+CREATE INDEX idx_sys_message_receive_user ON sys_message(receive_user_id);
+CREATE INDEX idx_sys_message_read_flag ON sys_message(read_flag);
+CREATE INDEX idx_sys_message_business ON sys_message(business_type, business_id);
+CREATE INDEX idx_sys_message_create_time ON sys_message(create_time);
+
+-- 10. 登录日志表索引优化
+CREATE INDEX idx_login_log_user_id ON sys_login_log(user_id);
+CREATE INDEX idx_login_log_account ON sys_login_log(login_account);
+CREATE INDEX idx_login_log_time ON sys_login_log(login_time);
+CREATE INDEX idx_login_log_status ON sys_login_log(login_status);
+
+-- 11. 操作日志表索引优化
+CREATE INDEX idx_oper_log_user_id ON sys_oper_log(oper_user_id);
+CREATE INDEX idx_oper_log_module ON sys_oper_log(module);
+CREATE INDEX idx_oper_log_type ON sys_oper_log(oper_type);
+CREATE INDEX idx_oper_log_time ON sys_oper_log(oper_time);
+
+-- 12. 配置表索引优化
+CREATE INDEX idx_sys_config_key ON sys_config(config_key);
+
+-- 13. 试卷题目关联表索引优化
+CREATE INDEX idx_exam_paper_question_paper_id ON exam_paper_question(paper_id);
+CREATE INDEX idx_exam_paper_question_question_id ON exam_paper_question(question_id);
+CREATE INDEX idx_exam_paper_question_order ON exam_paper_question(question_order);
+
+-- 14. 学习记录表索引优化
+CREATE INDEX idx_learn_study_record_task_id ON learn_study_record(task_id);
+CREATE INDEX idx_learn_study_record_user_id ON learn_study_record(user_id);
+CREATE INDEX idx_learn_study_record_material_id ON learn_study_record(material_id);
+CREATE INDEX idx_learn_study_record_time ON learn_study_record(report_time);

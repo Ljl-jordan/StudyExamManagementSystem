@@ -9,9 +9,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+// ... existing code ...
 @Repository
 public interface SysUserRepository extends JpaRepository<SysUser, Long> , JpaSpecificationExecutor<SysUser> {
 
@@ -20,6 +22,9 @@ public interface SysUserRepository extends JpaRepository<SysUser, Long> , JpaSpe
     List<SysUser> findByIsDelete(Byte isDelete);
 
     List<SysUser> findByOrgIdAndIsDelete(Long orgId, Byte isDelete);
+
+    // 添加查找锁定用户的查询方法
+    List<SysUser> findByUserStatusAndLockTimeBeforeAndIsDelete(Byte userStatus, Date lockTime, Byte isDelete);
 
     long countByOrgIdAndIsDelete(Long orgId, Byte isDelete);
 

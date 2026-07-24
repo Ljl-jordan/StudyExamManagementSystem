@@ -160,6 +160,17 @@ public class ExamAnswerServiceImpl implements ExamAnswerService {
                     }
 
                     questions.add(questionInfo);
+                }else {
+                    // 题目已被删除，提供兜底展示
+                    Map<String, Object> questionInfo = new HashMap<>();
+                    questionInfo.put("id", paperQuestion.getQuestionId());
+                    questionInfo.put("title", "【题目已移除】");
+                    questionInfo.put("type", paperQuestion.getQuestionType());
+                    questionInfo.put("score", paperQuestion.getScore());
+                    questionInfo.put("order", paperQuestion.getQuestionOrder());
+                    questionInfo.put("options", Arrays.asList("该题目已被管理员删除"));
+
+                    questions.add(questionInfo);
                 }
             }
 
@@ -323,6 +334,12 @@ public class ExamAnswerServiceImpl implements ExamAnswerService {
             for (ExamAnswerSheet sheet : sheets) {
                 ExamPaper examPaper = examPaperRepository.findById(sheet.getPaperId()).orElse(null);
                 if (examPaper != null && examPaper.getEndTime() != null && now.after(examPaper.getEndTime())) {
+
+                    // 检查试卷是否已归档，如果是则跳过自动交卷
+                    if (examPaper.getPaperStatus() == 2) { // 2-已归档
+                        continue;
+                    }
+
                     // 自动交卷
                     sheet.setStatus((byte) 1); // 1-已提交
                     sheet.setSubmitTime(now);

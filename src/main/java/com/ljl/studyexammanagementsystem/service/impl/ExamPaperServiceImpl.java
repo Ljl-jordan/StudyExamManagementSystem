@@ -1,6 +1,8 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.entity.ExamAnswerSheet;
 import com.ljl.studyexammanagementsystem.entity.ExamPaper;
+import com.ljl.studyexammanagementsystem.repository.ExamAnswerSheetRepository;
 import com.ljl.studyexammanagementsystem.repository.ExamPaperRepository;
 import com.ljl.studyexammanagementsystem.service.ExamPaperService;
 import com.ljl.studyexammanagementsystem.utils.DataPermissionUtil;
@@ -27,6 +29,9 @@ public class ExamPaperServiceImpl implements ExamPaperService {
 
     @Autowired
     private DataPermissionUtil dataPermissionUtil;
+
+    @Autowired
+    private ExamAnswerSheetRepository examAnswerSheetRepository;
 
     @Override
     public Result<Page<ExamPaper>> page(Integer pageNum, Integer pageSize, String keyword, Long userId, Long orgId) {
@@ -287,6 +292,13 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         // 检查试卷状态（必须是已发布或草稿状态）
         if (paper.getPaperStatus() == 2) { // 2 表示已归档
             return Result.paramError("试卷已归档，无需重复操作");
+        }
+
+        // 检查是否有正在进行的考试
+        // 检查是否存在进行中的答卷
+        long activeSheetsCount = examAnswerSheetRepository.countByPaperIdAndStatusAndIsDelete(paper.getId(), (byte) 0, (byte) 0);
+        if (activeSheetsCount > 0) {
+            return Result.paramError("该试卷存在进行中的考试，无法归档，请等待考试结束后再操作");
         }
 
         // 归档试卷（更新状态为已归档）

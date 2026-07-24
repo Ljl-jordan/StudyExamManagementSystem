@@ -33,4 +33,9 @@ public class ExamPaperQuestion {
     @ApiModelProperty(value = "题目分值", example = "5.0")
     private Double score;
 
+
+    @Column(name = "question_type", nullable = false)
+    @ApiModelProperty(value = "题型：1单选题 2多选题 3判断题 4填空题 5简答题")
+    private Byte questionType;
+
 }

@@ -13,6 +13,7 @@ import com.ljl.studyexammanagementsystem.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
      * 登录日志由 @OperateLog 注解通过AOP自动记录
      */
     @Override
+    @Transactional
     @OperateLog(module = "用户登录", type = "LOGIN")
     public Result<Map<String, Object>> login(LoginVO loginVO, String loginIp) {
         String loginAccount = loginVO.getLoginAccount();

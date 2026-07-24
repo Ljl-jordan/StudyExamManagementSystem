@@ -17,4 +17,6 @@ public interface ExamAnswerSheetRepository extends JpaRepository<ExamAnswerSheet
 
     ExamAnswerSheet findByPaperIdAndUserIdAndIsDelete(Long paperId, Long userId, Byte isDelete);
 
+    // 添加按试卷ID和状态统计的方法
+    long countByPaperIdAndStatusAndIsDelete(Long paperId, Byte status, Byte isDelete);
 }
