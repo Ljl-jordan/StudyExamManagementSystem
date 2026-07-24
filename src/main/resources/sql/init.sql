@@ -13,9 +13,7 @@ CREATE TABLE `sys_org` (
                            KEY idx_is_delete (`is_delete`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='组织表';
 
-create table sys_org(
 
-)
 -- 2. 用户表 sys_user
 CREATE TABLE `sys_user` (
                             `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键自增ID',
@@ -731,3 +729,100 @@ CREATE INDEX idx_learn_study_record_task_id ON learn_study_record(task_id);
 CREATE INDEX idx_learn_study_record_user_id ON learn_study_record(user_id);
 CREATE INDEX idx_learn_study_record_material_id ON learn_study_record(material_id);
 CREATE INDEX idx_learn_study_record_time ON learn_study_record(report_time);
+
+
+-- 4. 示例用户（密码均为123456）
+INSERT INTO sys_user (login_account, password, phone, user_name, org_id, user_status, create_user, create_time, update_user, update_time, is_delete) VALUES
+                                                                                                                                                         ('zhangsan', 'e10adc3949ba59abbe56e057f20f883e', '13900001111', '张三', 2, 0, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                                         ('lisi',     'e10adc3949ba59abbe56e057f20f883e', '13900002222', '李四', 3, 0, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                                         ('wangwu',   'e10adc3949ba59abbe56e057f20f883e', '13900003333', '王五', 4, 0, 1, NOW(), 1, NOW(), 0);
+
+-- 5. 内置角色
+INSERT INTO sys_role (id, role_name, role_type, menu_ids, data_scope, create_user, create_time, update_user, update_time, is_delete) VALUES
+                                                                                                                                         (1, '超级管理员', 0, NULL, 1, NULL, NOW(), NULL, NOW(), 0),
+                                                                                                                                         (2, '普通管理员', 0, NULL, 2, NULL, NOW(), NULL, NOW(), 0),
+                                                                                                                                         (3, '普通用户',   0, NULL, 3, NULL, NOW(), NULL, NOW(), 0);
+
+-- 6. 用户角色关联
+INSERT INTO sys_user_role (id, user_id, role_id) VALUES
+    (1, 1, 1);
+
+-- 7. 菜单权限（完整初始数据）
+INSERT INTO sys_menu (id, parent_id, menu_name, route, button_perms, sort, create_time, update_time, is_delete) VALUES
+                                                                                                                    (1, 0, '系统管理', 'system', NULL, 1, NOW(), NOW(), 0),
+                                                                                                                    (2, 0, '组织管理', 'organization', NULL, 2, NOW(), NOW(), 0),
+                                                                                                                    (3, 0, '用户管理', 'user', NULL, 3, NOW(), NOW(), 0),
+                                                                                                                    (4, 0, '角色管理', 'role', NULL, 4, NOW(), NOW(), 0),
+                                                                                                                    (5, 0, '日志管理', 'log', NULL, 5, NOW(), NOW(), 0),
+                                                                                                                    (6, 0, '消息中心', 'message', NULL, 6, NOW(), NOW(), 0),
+                                                                                                                    (7, 0, '系统配置', 'config', NULL, 7, NOW(), NOW(), 0),
+                                                                                                                    (10, 2, '组织列表', 'org:list', 'org:list,org:search', 1, NOW(), NOW(), 0),
+                                                                                                                    (11, 2, '新增组织', 'org:add', 'org:add', 2, NOW(), NOW(), 0),
+                                                                                                                    (12, 2, '编辑组织', 'org:edit', 'org:edit', 3, NOW(), NOW(), 0),
+                                                                                                                    (13, 2, '删除组织', 'org:delete', 'org:delete', 4, NOW(), NOW(), 0),
+                                                                                                                    (20, 3, '用户列表', 'user:list', 'user:list,user:selectUser', 1, NOW(), NOW(), 0),
+                                                                                                                    (21, 3, '新增用户', 'user:add', 'user:add', 2, NOW(), NOW(), 0),
+                                                                                                                    (22, 3, '编辑用户', 'user:edit', 'user:edit', 3, NOW(), NOW(), 0),
+                                                                                                                    (23, 3, '删除用户', 'user:delete', 'user:delete', 4, NOW(), NOW(), 0),
+                                                                                                                    (24, 3, '导入用户', 'user:import', 'user:import', 5, NOW(), NOW(), 0),
+                                                                                                                    (25, 3, '重置密码', 'user:resetPwd', 'user:resetPwd', 6, NOW(), NOW(), 0),
+                                                                                                                    (26, 3, '批量调整组织', 'user:batchUpdateOrg', 'user:batchUpdateOrg', 7, NOW(), NOW(), 0),
+                                                                                                                    (27, 3, '批量禁用', 'user:batchDisable', 'user:batchDisable', 8, NOW(), NOW(), 0),
+                                                                                                                    (30, 4, '角色列表', 'role:list', 'role:list', 1, NOW(), NOW(), 0),
+                                                                                                                    (31, 4, '新增角色', 'role:add', 'role:add', 2, NOW(), NOW(), 0),
+                                                                                                                    (32, 4, '编辑角色', 'role:edit', 'role:edit', 3, NOW(), NOW(), 0),
+                                                                                                                    (33, 4, '删除角色', 'role:delete', 'role:delete', 4, NOW(), NOW(), 0),
+                                                                                                                    (34, 4, '复制角色', 'role:copy', 'role:copy', 5, NOW(), NOW(), 0),
+                                                                                                                    (35, 4, '分配菜单', 'role:allotMenu', 'role:allotMenu', 6, NOW(), NOW(), 0),
+                                                                                                                    (36, 4, '分配用户', 'role:allotUser', 'role:allotUser', 7, NOW(), NOW(), 0),
+                                                                                                                    (40, 5, '登录日志', 'loginLog:list', 'loginLog:list', 1, NOW(), NOW(), 0),
+                                                                                                                    (41, 5, '操作日志', 'operLog:list', 'operLog:list', 2, NOW(), NOW(), 0),
+                                                                                                                    (50, 6, '消息列表', 'message:list', 'message:list,message:read,message:delete', 1, NOW(), NOW(), 0),
+                                                                                                                    (51, 6, '手动推送', 'message:push', 'message:push', 2, NOW(), NOW(), 0),
+                                                                                                                    (60, 7, '配置列表', 'config:list', 'config:list', 1, NOW(), NOW(), 0),
+                                                                                                                    (61, 7, '修改配置', 'config:edit', 'config:edit', 2, NOW(), NOW(), 0);
+
+-- 8. 超级管理员角色绑定全部菜单
+INSERT INTO sys_role_menu (role_id, menu_id, create_user, create_time, update_user, update_time, is_delete)
+SELECT 1, id, NULL, NOW(), NULL, NOW(), 0 FROM sys_menu WHERE is_delete = 0;
+
+-- 9. 系统配置初始数据
+INSERT INTO sys_config (config_key, config_value, config_desc, update_time, is_delete) VALUES
+                                                                                           ('system:siteName', '学习考试管理系统', '系统站点名称', NOW(), 0),
+                                                                                           ('system:passwordDefault', '123456', '用户初始默认密码', NOW(), 0),
+                                                                                           ('system:loginFailLimit', '5', '登录失败锁定次数', NOW(), 0),
+                                                                                           ('system:lockMinutes', '30', '账号锁定时长（分钟）', NOW(), 0),
+                                                                                           ('system:exportLimit', '5000', '同步导出上限条数', NOW(), 0),
+                                                                                           ('system:messageExpireDays', '90', '消息自动清理天数', NOW(), 0),
+                                                                                           ('system:logArchiveDays', '180', '日志归档天数', NOW(), 0),
+                                                                                           ('schedule.task.account.unlock', 'true', '定时任务-账号自动解锁开关', NOW(), 0),
+                                                                                           ('schedule.task.paper.autosubmit', 'true', '定时任务-自动交卷开关', NOW(), 0),
+                                                                                           ('schedule.task.question.autograde', 'true', '定时任务-客观题自动判分开关', NOW(), 0),
+                                                                                           ('schedule.task.message.cleanup', 'true', '定时任务-过期消息清理开关', NOW(), 0),
+                                                                                           ('schedule.task.log.archive', 'true', '定时任务-日志归档开关', NOW(), 0),
+                                                                                           ('schedule.task.learning.reminder', 'true', '定时任务-学习任务提醒开关', NOW(), 0);
+
+-- 10. 字典初始数据
+INSERT INTO sys_dict (dict_type, dict_label, dict_value, sort, create_user, create_time, update_user, update_time, is_delete) VALUES
+                                                                                                                                  ('user_status', '正常', '0', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('user_status', '禁用', '1', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('user_status', '锁定', '2', 3, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('question_type', '单选题', '1', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('question_type', '多选题', '2', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('question_type', '判断题', '3', 3, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('question_type', '填空题', '4', 4, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('question_type', '简答题', '5', 5, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('difficulty_level', '简单', '1', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('difficulty_level', '一般', '2', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('difficulty_level', '困难', '3', 3, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('paper_type', '练习卷', '1', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('paper_type', '正式考试', '2', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('paper_status', '草稿', '0', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('paper_status', '已发布', '1', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('paper_status', '已归档', '2', 3, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('task_status', '草稿', '0', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('task_status', '已下发', '1', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('task_status', '已结束', '2', 3, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('material_type', '富文本', '1', 1, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('material_type', '附件', '2', 2, 1, NOW(), 1, NOW(), 0),
+                                                                                                                                  ('material_type', '外链', '3', 3, 1, NOW(), 1, NOW(), 0);
