@@ -27,5 +27,6 @@ public interface UserService {
 
     Result<Void> batchDisable(List<Long> userIds, Long operatorId);
 
+    Result<Void> batchEnable(List<Long> userIds, Long operatorId);
     Result<Map<String, Object>> selectUsers(Integer pageNum, Integer pageSize, String keyword);
 }

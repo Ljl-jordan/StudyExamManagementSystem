@@ -93,6 +93,13 @@ public class UserController {
         return userService.batchDisable(userIds, operatorId);
     }
 
+    @PostMapping("/batchEnable")
+    @ApiOperation(value = "批量启用用户")
+    public Result<Void> batchEnable(@RequestBody Map<String, Object> params, HttpServletRequest request) {
+        Long operatorId = (Long) request.getAttribute("userId");
+        List<Long> userIds = (List<Long>) params.get("userIds");
+        return userService.batchEnable(userIds, operatorId);
+    }
     @GetMapping("/selectUser")
     @ApiOperation(value = "用户下拉选择（分页）")
     public Result<Map<String, Object>> selectUsers(

@@ -12,6 +12,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private TokenInterceptor tokenInterceptor;
 
+    @Autowired
+    private PermissionInterceptor permissionInterceptor;
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("doc.html")
@@ -20,12 +22,25 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 
+
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
                         "/api/auth/login",
+                        "/doc.html",
+                        "/swagger-resources/**",
+                        "/v2/api-docs/**",
+                        "/webjars/**"
+                );
+
+        registry.addInterceptor(permissionInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns(
+                        "/api/auth/login",
+                        "/api/auth/currentUser",
                         "/doc.html",
                         "/swagger-resources/**",
                         "/v2/api-docs/**",

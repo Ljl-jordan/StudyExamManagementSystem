@@ -363,6 +363,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public Result<Void> batchEnable(List<Long> userIds, Long operatorId) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Result.paramError("请选择用户");
+        }
+        for (Long uid : userIds) {
+            SysUser user = sysUserRepository.findActiveById(uid).orElse(null);
+            if (user != null) {
+                user.setUserStatus((byte) 0);
+                user.setLockTime(null);
+                user.setUpdateUser(operatorId);
+                user.setUpdateTime(new Date());
+                sysUserRepository.save(user);
+            }
+        }
+        return Result.success("批量启用成功", null);
+    }
+
+    @Override
     public Result<Map<String, Object>> selectUsers(Integer pageNum, Integer pageSize, String keyword) {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         Page<SysUser> page;
