@@ -1,15 +1,12 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://10.0.138.64:3306/StudyExamManagementSystem?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
-    # ... existing code ...
-
-    username: root
-    password: Z9FOpju5
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:studyexammanagementsystem}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
   jpa:
     hibernate:
-      ddl-auto: update   # update: 更新数据库表结构，创建或修改表
-      #validate: 校验数据库表结构，不创建或修改表
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -20,12 +17,10 @@ spring:
     time-zone: Asia/Shanghai
 
 jwt:
-  secret: StudyExamManagementSystemJwtSecretKey2026ForHS256Algorithm
-  expiration: 86400000   #24小时
+  secret: ${JWT_SECRET:StudyExamManagementSystemJwtSecretKey2026ForHS256Algorithm}
+  expiration: 86400000
 
 file:
   upload-path: D:/upload/
   allowed-extensions: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar
-  max-size: 52428800   #5MB
-
-
+  max-size: 52428800

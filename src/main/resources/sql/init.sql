@@ -826,3 +826,7 @@ INSERT INTO sys_dict (dict_type, dict_label, dict_value, sort, create_user, crea
                                                                                                                                   ('material_type', '富文本', '1', 1, 1, NOW(), 1, NOW(), 0),
                                                                                                                                   ('material_type', '附件', '2', 2, 1, NOW(), 1, NOW(), 0),
                                                                                                                                   ('material_type', '外链', '3', 3, 1, NOW(), 1, NOW(), 0);
+
+
+
+

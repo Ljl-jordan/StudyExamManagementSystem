@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
-@RestController
+@RestController //结合@Controller 和 @ResponseBody
 @RequestMapping("/api/auth")
 @Api(tags = "认证相关接口")
 public class AuthController {
