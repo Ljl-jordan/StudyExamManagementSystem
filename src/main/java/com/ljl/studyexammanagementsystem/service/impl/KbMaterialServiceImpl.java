@@ -1,5 +1,7 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
+import com.ljl.studyexammanagementsystem.cache.CacheService;
 import com.ljl.studyexammanagementsystem.entity.KbMaterial;
 import com.ljl.studyexammanagementsystem.entity.KbMaterialFile;
 import com.ljl.studyexammanagementsystem.repository.KbMaterialFileRepository;
@@ -34,6 +36,9 @@ public class KbMaterialServiceImpl implements KbMaterialService {
     @Autowired
     private DataPermissionUtil dataPermissionUtil;
 
+    @Autowired
+    private CacheService cacheService;
+
     /**
      * 素材分页列表（带数据权限）
      */
@@ -66,8 +71,15 @@ public class KbMaterialServiceImpl implements KbMaterialService {
      */
     @Override
     public Result<KbMaterial> detail(Long id, Long userId, Long orgId) {
-        KbMaterial material = kbMaterialRepository.findById(id).orElse(null);
-        if (material == null || material.getIsDelete() == 1) {
+        KbMaterial material = cacheService.getOrLoad(
+                CacheKeys.materialDetail(id),
+                KbMaterial.class,
+                30 * 60L,
+                () -> {
+                    KbMaterial cached = kbMaterialRepository.findById(id).orElse(null);
+                    return cached == null || cached.getIsDelete() == 1 ? null : cached;
+                });
+        if (material == null) {
             return Result.paramError("素材不存在");
         }
         return Result.success(material);
@@ -151,6 +163,7 @@ public class KbMaterialServiceImpl implements KbMaterialService {
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());
         kbMaterialRepository.save(existing);
+        cacheService.evict(CacheKeys.materialDetail(id));
 
         // 更新附件关联（先删后增）
         if (fileIds != null && material.getMaterialType() != null && material.getMaterialType() == 2) {
@@ -181,6 +194,7 @@ public class KbMaterialServiceImpl implements KbMaterialService {
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());
         kbMaterialRepository.save(existing);
+        cacheService.evict(CacheKeys.materialDetail(id));
         return Result.success("发布成功", null);
     }
 
@@ -203,6 +217,7 @@ public class KbMaterialServiceImpl implements KbMaterialService {
         existing.setIsDelete((byte) 1);
         existing.setUpdateTime(new Date());
         kbMaterialRepository.save(existing);
+        cacheService.evict(CacheKeys.materialDetail(id));
         // 同步删除附件关联
         List<KbMaterialFile> files = kbMaterialFileRepository.findByMaterialIdAndIsDelete(id, (byte) 0);
         for (KbMaterialFile mf : files) {
@@ -235,6 +250,7 @@ public class KbMaterialServiceImpl implements KbMaterialService {
                 material.setUpdateUser(userId);
                 material.setUpdateTime(new Date());
                 kbMaterialRepository.save(material);
+                cacheService.evict(CacheKeys.materialDetail(materialId));
             }
         }
         return Result.success("批量迁移成功", null);

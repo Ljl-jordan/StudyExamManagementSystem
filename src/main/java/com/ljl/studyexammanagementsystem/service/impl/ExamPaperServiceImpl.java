@@ -1,8 +1,11 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
 import com.ljl.studyexammanagementsystem.entity.ExamAnswerSheet;
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
+import com.ljl.studyexammanagementsystem.cache.CacheService;
 import com.ljl.studyexammanagementsystem.entity.ExamPaper;
 import com.ljl.studyexammanagementsystem.repository.ExamAnswerSheetRepository;
+import com.ljl.studyexammanagementsystem.lock.DistributedLockService;
 import com.ljl.studyexammanagementsystem.repository.ExamPaperRepository;
 import com.ljl.studyexammanagementsystem.service.ExamPaperService;
 import com.ljl.studyexammanagementsystem.utils.DataPermissionUtil;
@@ -31,6 +34,12 @@ public class ExamPaperServiceImpl implements ExamPaperService {
     private DataPermissionUtil dataPermissionUtil;
 
     @Autowired
+    private CacheService cacheService;
+
+    @Autowired
+    private DistributedLockService distributedLockService;
+
+    @Autowired
     private ExamAnswerSheetRepository examAnswerSheetRepository;
 
     @Override
@@ -56,7 +65,11 @@ public class ExamPaperServiceImpl implements ExamPaperService {
 
     @Override
     public Result<ExamPaper> detail(Long id) {
-        ExamPaper paper = examPaperRepository.findByIdAndIsDelete(id, (byte) 0);
+        ExamPaper paper = cacheService.getOrLoad(
+                CacheKeys.paperDetail(id),
+                ExamPaper.class,
+                10 * 60L,
+                () -> examPaperRepository.findByIdAndIsDelete(id, (byte) 0));
         if (paper == null) {
             return Result.paramError("试卷不存在");
         }
@@ -92,6 +105,7 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         }
 
         examPaperRepository.save(paper);
+        cacheService.evict(CacheKeys.paperDetail(paper.getId()));
 
         return Result.success();
     }
@@ -129,6 +143,7 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         existing.setUpdateTime(new Date());
 
         examPaperRepository.save(existing);
+        cacheService.evict(CacheKeys.paperDetail(existing.getId()));
 
         return Result.success();
     }
@@ -148,6 +163,7 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         paper.setIsDelete((byte) 1);
         paper.setUpdateTime(new Date());
         examPaperRepository.save(paper);
+        cacheService.evict(CacheKeys.paperDetail(paper.getId()));
 
         return Result.success("删除成功");
     }
@@ -232,25 +248,22 @@ public class ExamPaperServiceImpl implements ExamPaperService {
     @Override
     @Transactional
     public Result<String> publish(Long id, Long userId) {
+        return distributedLockService.execute(CacheKeys.paperPublishLock(id), () -> doPublish(id, userId));
+    }
+
+    private Result<String> doPublish(Long id, Long userId) {
         ExamPaper paper = examPaperRepository.findByIdAndIsDelete(id, (byte) 0);
         if (paper == null) {
             return Result.paramError("试卷不存在");
         }
-
-        // 检查试卷状态（必须是草稿状态）
         if (paper.getPaperStatus() != 0) {
             return Result.paramError("只有草稿状态的试卷才能发布");
         }
-
-        // 检查试卷是否已完成组卷（有题目）
-        // 这里需要检查试卷是否有对应的题目，简化实现中跳过检查
-        // 实际项目中应该检查exam_paper_question表中是否有对应试卷的记录
-
-        // 发布试卷（更新状态为已发布）
-        paper.setPaperStatus((byte) 1); // 1 表示已发布
+        paper.setPaperStatus((byte) 1);
+        paper.setPublishTime(new Date());
         paper.setUpdateTime(new Date());
         examPaperRepository.save(paper);
-
+        cacheService.evict(CacheKeys.paperDetail(paper.getId()));
         return Result.success("试卷发布成功");
     }
 
@@ -276,6 +289,7 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         paper.setPaperStatus((byte) 0); // 0 表示草稿
         paper.setUpdateTime(new Date());
         examPaperRepository.save(paper);
+        cacheService.evict(CacheKeys.paperDetail(paper.getId()));
 
         return Result.success("取消发布成功");
     }
@@ -305,6 +319,7 @@ public class ExamPaperServiceImpl implements ExamPaperService {
         paper.setPaperStatus((byte) 2); // 2 表示已归档
         paper.setUpdateTime(new Date());
         examPaperRepository.save(paper);
+        cacheService.evict(CacheKeys.paperDetail(paper.getId()));
 
         return Result.success("试卷归档成功");
     }

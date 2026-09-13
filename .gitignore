@@ -36,8 +36,7 @@ out/
 ### VS Code ###
 .vscode/
 
-### Personal resume materials ###
+### Personal / docs (not for public repo) ###
 resume_extract/
-李佳磊_Java后端全栈_一页简历.md
-学考管理系统_面试速记.md
+*.md
 

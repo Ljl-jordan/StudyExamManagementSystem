@@ -49,8 +49,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @OperateLog(module = "用户登录", type = "LOGIN")
     public Result<Map<String, Object>> login(LoginVO loginVO, String loginIp) {
-        String loginAccount = loginVO.getLoginAccount();
-        String inputPassword = loginVO.getPassword();
+        String loginAccount = loginVO.getLoginAccount();//获取登陆账号
+        String inputPassword = loginVO.getPassword();//获取登陆密码
 
         // ① 查询用户（未删除的）
         SysUser user = sysUserRepository.findByLoginAccountAndIsDelete(loginAccount, (byte) 0).orElse(null);

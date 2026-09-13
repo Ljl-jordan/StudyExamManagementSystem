@@ -1,7 +1,9 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
 import com.ljl.studyexammanagementsystem.entity.*;
 import com.ljl.studyexammanagementsystem.repository.*;
+import com.ljl.studyexammanagementsystem.lock.DistributedLockService;
 import com.ljl.studyexammanagementsystem.service.QbQuestionService;
 import com.ljl.studyexammanagementsystem.utils.DataPermissionUtil;
 import com.ljl.studyexammanagementsystem.vo.Result;
@@ -48,6 +50,9 @@ public class QbQuestionServiceImpl implements QbQuestionService {
 
     @Autowired
     private DataPermissionUtil dataPermissionUtil;
+
+    @Autowired
+    private DistributedLockService distributedLockService;
 
     @Override
     public Result<Page<QbQuestion>> page(Integer pageNum, Integer pageSize, String keyword, Long categoryId, Long userId, Long orgId) {
@@ -190,6 +195,16 @@ public class QbQuestionServiceImpl implements QbQuestionService {
     @Override
     @Transactional
     public Result<String> batchImport(MultipartFile file, Long userId) {
+        if (file == null || file.isEmpty()) {
+            return Result.paramError("导入文件不能为空");
+        }
+        String batchId = userId + ":" + file.getOriginalFilename() + ":" + file.getSize();
+        return distributedLockService.execute(
+                CacheKeys.questionImportLock(batchId),
+                () -> doBatchImport(file, userId));
+    }
+
+    private Result<String> doBatchImport(MultipartFile file, Long userId) {
         try {
             Workbook workbook = new XSSFWorkbook(file.getInputStream());
             Sheet sheet = workbook.getSheetAt(0);

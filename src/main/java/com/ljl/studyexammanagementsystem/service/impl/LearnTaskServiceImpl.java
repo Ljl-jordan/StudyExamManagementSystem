@@ -1,5 +1,7 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
+import com.ljl.studyexammanagementsystem.cache.CacheService;
 import com.ljl.studyexammanagementsystem.entity.LearnTask;
 import com.ljl.studyexammanagementsystem.entity.LearnTaskMaterial;
 import com.ljl.studyexammanagementsystem.entity.LearnTaskUser;
@@ -45,6 +47,9 @@ public class LearnTaskServiceImpl implements LearnTaskService {
     @Autowired
     private MessageUtil messageUtil;
 
+    @Autowired
+    private CacheService cacheService;
+
     /**
      * 任务分页列表（支持按状态筛选 + 数据权限）
      */
@@ -82,8 +87,15 @@ public class LearnTaskServiceImpl implements LearnTaskService {
      */
     @Override
     public Result<LearnTask> detail(Long id, Long userId, Long orgId) {
-        LearnTask task = learnTaskRepository.findById(id).orElse(null);
-        if (task == null || task.getIsDelete() == 1) {
+        LearnTask task = cacheService.getOrLoad(
+                CacheKeys.taskDetail(id),
+                LearnTask.class,
+                10 * 60L,
+                () -> {
+                    LearnTask cached = learnTaskRepository.findById(id).orElse(null);
+                    return cached == null || cached.getIsDelete() == 1 ? null : cached;
+                });
+        if (task == null) {
             return Result.paramError("任务不存在");
         }
         return Result.success(task);
@@ -159,6 +171,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setUpdateUser(updateUserId);
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
+        cacheService.evict(CacheKeys.taskDetail(id));
 
         if (materialIds != null) {
             List<LearnTaskMaterial> oldMaterials = learnTaskMaterialRepository.findByTaskIdAndIsDelete(id, (byte) 0);
@@ -195,6 +208,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setIsDelete((byte) 1);
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
+        cacheService.evict(CacheKeys.taskDetail(id));
 
         List<LearnTaskMaterial> materials = learnTaskMaterialRepository.findByTaskIdAndIsDelete(id, (byte) 0);
         for (LearnTaskMaterial ltm : materials) {
@@ -237,6 +251,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
+        cacheService.evict(CacheKeys.taskDetail(id));
 
         // 事务内批量生成消息（任意异常则整体回滚）
         List<Long> receiveUserIds = taskUsers.stream()
@@ -350,6 +365,7 @@ public class LearnTaskServiceImpl implements LearnTaskService {
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());
         learnTaskRepository.save(existing);
+        cacheService.evict(CacheKeys.taskDetail(id));
         return Result.success("归档成功", null);
     }
 

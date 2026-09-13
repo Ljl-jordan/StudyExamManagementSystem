@@ -1,5 +1,7 @@
 package com.ljl.studyexammanagementsystem.service.impl;
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
 import com.ljl.studyexammanagementsystem.entity.*;
+import com.ljl.studyexammanagementsystem.lock.DistributedLockService;
 import com.ljl.studyexammanagementsystem.repository.*;
 import com.ljl.studyexammanagementsystem.service.ExamAnswerService;
 import com.ljl.studyexammanagementsystem.utils.DataPermissionUtil;
@@ -54,6 +56,9 @@ public class ExamAnswerServiceImpl implements ExamAnswerService {
 
     @Autowired
     private DataPermissionUtil dataPermissionUtil;
+
+    @Autowired
+    private DistributedLockService distributedLockService;
 
     @Autowired
     private ExamPaperQuestionRepository examPaperQuestionRepository;
@@ -238,38 +243,37 @@ public class ExamAnswerServiceImpl implements ExamAnswerService {
 
     @Override
     public Result<String> submitPaper(Long answerSheetId, HttpServletRequest request) {
+        ExamAnswerSheet answerSheet = examAnswerSheetRepository.findById(answerSheetId).orElse(null);
+        if (answerSheet == null) {
+            return Result.error("答卷不存在");
+        }
+        Long userId = (Long) request.getAttribute("userId");
+        return distributedLockService.execute(
+                CacheKeys.answerSubmitLock(answerSheet.getPaperId(), userId),
+                () -> doSubmitPaper(answerSheetId, request));
+    }
+
+    private Result<String> doSubmitPaper(Long answerSheetId, HttpServletRequest request) {
         try {
-            // 校验答卷
             ExamAnswerSheet answerSheet = examAnswerSheetRepository.findById(answerSheetId).orElse(null);
-            if (answerSheet == null || answerSheet.getStatus() != 0) { // 0-进行中
+            if (answerSheet == null || answerSheet.getStatus() != 0) {
                 return Result.error("答卷不存在或已完成");
             }
-
-            // 校验用户权限
             Long userId = (Long) request.getAttribute("userId");
             if (!Objects.equals(answerSheet.getUserId(), userId)) {
-                return Result.error("无权限操作他人答卷");
+                return Result.error("无权操作他人答卷");
             }
-
-            // 校验考试时间（如果已超过截止时间则不允许手动交卷）
             ExamPaper examPaper = examPaperRepository.findById(answerSheet.getPaperId()).orElse(null);
             if (examPaper != null && examPaper.getEndTime() != null && new Date().after(examPaper.getEndTime())) {
                 return Result.error("考试时间已结束，无法手动交卷");
             }
-
-            // 更新答卷状态
-            answerSheet.setStatus((byte) 1); // 1-已提交
+            answerSheet.setStatus((byte) 1);
             answerSheet.setSubmitTime(new Date());
             answerSheet.setUpdateTime(new Date());
-
-            // 进行客观题自动判分
             autoGradeObjectiveQuestions(answerSheetId);
-
             examAnswerSheetRepository.save(answerSheet);
-
             return Result.success("交卷成功");
         } catch (Exception e) {
-            e.printStackTrace();
             return Result.error("交卷失败：" + e.getMessage());
         }
     }

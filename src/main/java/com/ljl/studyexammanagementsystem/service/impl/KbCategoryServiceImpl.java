@@ -1,5 +1,8 @@
 package com.ljl.studyexammanagementsystem.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.ljl.studyexammanagementsystem.cache.CacheKeys;
+import com.ljl.studyexammanagementsystem.cache.CacheService;
 import com.ljl.studyexammanagementsystem.entity.KbCategory;
 import com.ljl.studyexammanagementsystem.repository.KbCategoryRepository;
 import com.ljl.studyexammanagementsystem.repository.KbMaterialRepository;
@@ -30,16 +33,23 @@ public class KbCategoryServiceImpl implements KbCategoryService {
     @Autowired
     private DataPermissionUtil dataPermissionUtil;
 
+    @Autowired
+    private CacheService cacheService;
+
     /**
      * 获取分类树形结构（带数据权限过滤）
      */
     @Override
     public Result<List<KbCategory>> getTree(Long userId, Long orgId) {
-        //获取未被删除的全部分类列表
+        String cacheKey = CacheKeys.categoryTree(userId, orgId);
+        List<KbCategory> cached = cacheService.get(cacheKey, new TypeReference<List<KbCategory>>() {});
+        if (cached != null) {
+            return Result.success(cached);
+        }
         List<KbCategory> allCategories = kbCategoryRepository.findByIsDelete((byte) 0);
-        // 数据权限过滤
         allCategories = filterByDataScope(allCategories, userId, orgId);
         List<KbCategory> tree = buildTree(allCategories, 0L);
+        cacheService.put(cacheKey, tree, 10 * 60L);
         return Result.success(tree);
     }
 
@@ -101,6 +111,7 @@ keyword分类名称模糊查询，dataScope=2仅查看自己创建的分类
             category.setSortOrder(0);
         }
         kbCategoryRepository.save(category);
+        cacheService.evictByPrefix(CacheKeys.categoryTreePrefix());
         return Result.success("新增成功", null);
     }
 
@@ -142,6 +153,7 @@ keyword分类名称模糊查询，dataScope=2仅查看自己创建的分类
         existing.setUpdateUser(userId);
         existing.setUpdateTime(new Date());
         kbCategoryRepository.save(existing);
+        cacheService.evictByPrefix(CacheKeys.categoryTreePrefix());
         return Result.success("修改成功", null);
     }
 
@@ -168,6 +180,7 @@ keyword分类名称模糊查询，dataScope=2仅查看自己创建的分类
         existing.setIsDelete((byte) 1);
         existing.setUpdateTime(new Date());
         kbCategoryRepository.save(existing);
+        cacheService.evictByPrefix(CacheKeys.categoryTreePrefix());
         return Result.success("删除成功", null);
     }
 
